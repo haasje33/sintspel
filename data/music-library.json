@@ -554,13 +554,6 @@
       "year": 1978
     },
     {
-      "url": "www.hitstergame.com/nl/00150",
-      "artist": "Gotye feat. Kimbra",
-      "title": "Somebody That I Used to Know",
-      "card_year": 2011,
-      "year": 2011
-    },
-    {
       "url": "www.hitstergame.com/nl/00140",
       "artist": "TOTO",
       "title": "Africa",
@@ -751,6 +744,7 @@
     }
   ],
   "excluded_urls": [
-    "www.hitstergame.com/nl/00304"
+    "www.hitstergame.com/nl/00304",
+    "www.hitstergame.com/nl/00150"
   ]
 }

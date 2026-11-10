@@ -64,6 +64,21 @@ class ShowTests(unittest.TestCase):
             self.assertEqual(state['hitster_cards'][0]['url'],'www.example.org/music/001')
             self.assertEqual(state['hitster_cards'][0]['id'],'old')
 
+    def test_packaged_library_excludes_unusable_tracks(self):
+        import json
+        library=Path(__file__).resolve().parents[1]/'data'/'music-library.json'
+        payload=json.loads(library.read_text(encoding='utf-8'))
+        self.assertEqual(len(payload['cards']),106)
+        excluded=set(payload['excluded_urls'])
+        self.assertEqual(len(excluded),2)
+        self.assertIn('www.hitstergame.com/nl/00150',excluded)
+        self.assertNotIn('www.hitstergame.com/nl/00150',{c['url'] for c in payload['cards']})
+        state={'hitster_cards':[{'id':'old','url':'https://www.hitstergame.com/nl/00150',
+                                'artist':'Gotye','title':'Somebody That I Used to Know','year':2011}]}
+        game.load_packaged_library(state,library)
+        self.assertEqual(len(state['hitster_cards']),106)
+        self.assertFalse(any(c.get('title')=='Somebody That I Used to Know' for c in state['hitster_cards']))
+
     def test_dice_yahtzee_separate(self):
         g=self.start('dice');r=g['rounds'][0]
         r['rule']='target';r['target']=6
