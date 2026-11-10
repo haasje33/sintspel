@@ -16,6 +16,13 @@ class HitsterTests(unittest.TestCase):
         self.assertEqual(1, duplicates)
         self.assertEqual(1, len(errors))
         self.assertEqual('Title "Q"', cards[0]['title'])
+    def test_original_scanned_qr_without_scheme(self):
+        payload='www.hitstergame.com/nl/aaaa0006/00107'
+        rows,duplicates,errors=parse_cards_csv(payload+',Eiffel 65,Blue (Da Ba Dee),1998\\n')
+        self.assertEqual(errors,[])
+        self.assertEqual(duplicates,0)
+        self.assertEqual(rows[0]['url'],payload)
+
     def test_headers(self):
         cards, duplicates, errors = parse_cards_csv('\ufeffTitel;Jaar;URL;Artiest\nHey;1998;https://example.invalid/hey;B\n')
         self.assertEqual(1, len(cards))

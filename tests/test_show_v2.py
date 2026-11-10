@@ -46,6 +46,24 @@ class ShowTests(unittest.TestCase):
         self.assertFalse(game.same_answer('Love','Love Me Do','title'))
         self.assertFalse(game.same_answer('Hello','Hello Goodbye','title'))
 
+    def test_packaged_music_library_and_old_cards(self):
+        import json
+        import tempfile
+        demo={'cards':[{'url':'www.example.org/music/001','artist':'Correct Artist',
+                       'title':'Right Track','card_year':1980,'year':1990}],
+              'excluded_urls':['www.example.org/music/002']}
+        with tempfile.TemporaryDirectory() as directory:
+            path=Path(directory)/'library.json'
+            path.write_text(json.dumps(demo),encoding='utf-8')
+            state={'hitster_cards':[
+                {'id':'old','url':'https://www.example.org/music/001','artist':'Old','title':'Old','year':1980},
+                {'id':'wrong','url':'www.example.org/music/002','artist':'Wrong','title':'Bad','year':1980}]}
+            self.assertEqual(game.load_packaged_library(state,path),0)
+            self.assertEqual(len(state['hitster_cards']),1)
+            self.assertEqual(state['hitster_cards'][0]['year'],1990)
+            self.assertEqual(state['hitster_cards'][0]['url'],'www.example.org/music/001')
+            self.assertEqual(state['hitster_cards'][0]['id'],'old')
+
     def test_dice_yahtzee_separate(self):
         g=self.start('dice');r=g['rounds'][0]
         r['rule']='target';r['target']=6

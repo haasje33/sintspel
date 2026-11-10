@@ -151,15 +151,43 @@ def ensure(s):
 
 
 def load_packaged_library(s,path):
-    """Load repository-shipped music cards, retaining local imports and stable IDs."""
+    """Load the checked QR collection, honoring its metadata over old imports.
+
+    QR payloads are preserved verbatim: physical cards can contain a bare
+    ``www.example.com/...`` string rather than an HTTP scheme. A separate
+    exclusion list removes known mislinked physical cards from old sessions.
+    """
     if not path.is_file():return 0
     try:
-        entries=json.loads(path.read_text(encoding='utf-8'))
+        payload=json.loads(path.read_text(encoding='utf-8-sig'))
     except (OSError,ValueError,UnicodeError) as exc:
         raise ValueError('De meegeleverde muziekbibliotheek is ongeldig.') from exc
-    if not isinstance(entries,list):raise ValueError('Muziekbibliotheek moet een lijst zijn.')
+    if isinstance(payload,dict):
+        entries=payload.get('cards',[])
+        excluded=payload.get('excluded_urls',[])
+    elif isinstance(payload,list):
+        entries=payload
+        excluded=[]
+    else:
+        raise ValueError('Muziekbibliotheek moet een lijst of kaartenobject zijn.')
+    if not isinstance(entries,list) or not isinstance(excluded,list):
+        raise ValueError('Muziekbibliotheek heeft ongeldige kaarten of uitsluitingen.')
+
+    def identity(url):
+        return re.sub(r'^https?://','',str(url).strip(),flags=re.I).casefold()
+
+    def valid(url):
+        # Historical QR payloads use scheme-less www hostnames; do not alter
+        # their bytes by prepending https:// during import or QR generation.
+        if any(c.isspace() or ord(c)<32 for c in url) or len(url.encode('utf-8'))>1500:
+            return False
+        if re.match(r'^https?://[^/\\s]+/',url,re.I):return True
+        return bool(re.match(r'^www\\.[a-z0-9.-]+\\.[a-z]{2,}/[^\\s]+$',url,re.I))
+
+    excluded_keys={identity(x) for x in excluded if isinstance(x,str) and valid(x)}
     existing=s.setdefault('hitster_cards',[])
-    urls={c['url'] for c in existing}
+    existing[:]=[c for c in existing if identity(c.get('url','')) not in excluded_keys]
+    indexed={identity(c.get('url','')):c for c in existing if c.get('url')}
     added=0
     for item in entries:
         if not isinstance(item,dict):continue
@@ -168,11 +196,18 @@ def load_packaged_library(s,path):
         artist=str(item.get('artist','')).strip()
         try:year=int(item.get('year',0))
         except (ValueError,TypeError):continue
-        if not url.startswith(('https://','http://')) or not artist or not title or not 1900<=year<=2100 or url in urls:
+        if not valid(url) or not artist or not title or not 1900<=year<=2100 or identity(url) in excluded_keys:
+            continue
+        key=identity(url)
+        if key in indexed:
+            # Correct stale years or spelling in earlier local imports.
+            indexed[key].update({'url':url,'artist':artist,'title':title,'year':year})
             continue
         stable=hashlib.sha256(url.encode('utf-8')).hexdigest()[:32]
-        existing.append({'id':stable,'url':url,'artist':artist,'title':title,'year':year})
-        urls.add(url);added+=1
+        record={'id':stable,'url':url,'artist':artist,'title':title,'year':year}
+        existing.append(record)
+        indexed[key]=record
+        added+=1
     return added
 
 def player(s,pid):return next((p for p in s['players'] if p['id']==pid),None)

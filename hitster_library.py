@@ -59,7 +59,9 @@ def parse_cards_csv(content, known_urls=(), available_slots=MAX_CARDS):
             url, artist, title, raw_year = (row[i].strip() for i in headers)
             try:
                 parsed = urlsplit(url)
-                if (parsed.scheme.lower() not in ('http', 'https') or not parsed.hostname
+                full_url = parsed.scheme.lower() in ('http', 'https') and bool(parsed.hostname)
+                bare_qr = bool(re.fullmatch(r'www\\.[a-z0-9.-]+\\.[a-z]{2,}/\\S+', url, re.I))
+                if (not (full_url or bare_qr)
                     or any(ch.isspace() or ord(ch) < 32 for ch in url)
                     or len(url.encode('utf-8')) > 1500):
                     raise ValueError('ongeldige QR-URL')

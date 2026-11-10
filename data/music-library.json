@@ -1,1 +1,756 @@
-[]
+{
+  "cards": [
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00107",
+      "artist": "Eiffel 65",
+      "title": "Blue (Da Ba Dee)",
+      "card_year": 1998,
+      "year": 1998
+    },
+    {
+      "url": "www.hitstergame.com/nl/00018",
+      "artist": "De Dijk",
+      "title": "Mag het licht uit",
+      "card_year": 1987,
+      "year": 1987
+    },
+    {
+      "url": "www.hitstergame.com/nl/00209",
+      "artist": "Oasis",
+      "title": "Wonderwall",
+      "card_year": 1995,
+      "year": 1995
+    },
+    {
+      "url": "www.hitstergame.com/nl/00060",
+      "artist": "Loreen",
+      "title": "Euphoria",
+      "card_year": 2012,
+      "year": 2012
+    },
+    {
+      "url": "www.hitstergame.com/nl/00165",
+      "artist": "Dire Straits",
+      "title": "Walk of Life",
+      "card_year": 1985,
+      "year": 1985
+    },
+    {
+      "url": "www.hitstergame.com/nl/00252",
+      "artist": "The Police",
+      "title": "Every Breath You Take",
+      "card_year": 1983,
+      "year": 1983
+    },
+    {
+      "url": "www.hitstergame.com/nl/00251",
+      "artist": "Christina Aguilera",
+      "title": "Genie in a Bottle",
+      "card_year": 1999,
+      "year": 1999
+    },
+    {
+      "url": "www.hitstergame.com/nl/00164",
+      "artist": "The Rolling Stones",
+      "title": "Start Me Up",
+      "card_year": 1981,
+      "year": 1981
+    },
+    {
+      "url": "www.hitstergame.com/nl/00155",
+      "artist": "Wim Sonneveld",
+      "title": "Het Dorp",
+      "card_year": 1974,
+      "year": 1974
+    },
+    {
+      "url": "www.hitstergame.com/nl/00222",
+      "artist": "Jan Smit",
+      "title": "Als de morgen is gekomen",
+      "card_year": 2006,
+      "year": 2006
+    },
+    {
+      "url": "www.hitstergame.com/nl/00230",
+      "artist": "Elvis Presley",
+      "title": "Can't Help Falling in Love",
+      "card_year": 1961,
+      "year": 1961
+    },
+    {
+      "url": "www.hitstergame.com/nl/00216",
+      "artist": "Simply Red",
+      "title": "Holding Back the Years",
+      "card_year": 1985,
+      "year": 1985
+    },
+    {
+      "url": "www.hitstergame.com/nl/00300",
+      "artist": "Ramses Shaffy",
+      "title": "Laat me",
+      "card_year": 1978,
+      "year": 1978
+    },
+    {
+      "url": "www.hitstergame.com/nl/00244",
+      "artist": "Bon Jovi",
+      "title": "It's My Life",
+      "card_year": 2000,
+      "year": 2000
+    },
+    {
+      "url": "www.hitstergame.com/nl/00220",
+      "artist": "Dolly Parton",
+      "title": "Jolene",
+      "card_year": 1973,
+      "year": 1973
+    },
+    {
+      "url": "www.hitstergame.com/nl/00308",
+      "artist": "Owl City",
+      "title": "Fireflies",
+      "card_year": 2009,
+      "year": 2009
+    },
+    {
+      "url": "www.hitstergame.com/nl/00137",
+      "artist": "Kool & the Gang",
+      "title": "Celebration",
+      "card_year": 1980,
+      "year": 1980
+    },
+    {
+      "url": "www.hitstergame.com/nl/00177",
+      "artist": "Suzan & Freek",
+      "title": "Als het avond is",
+      "card_year": 2018,
+      "year": 2018
+    },
+    {
+      "url": "www.hitstergame.com/nl/00306",
+      "artist": "The Beatles",
+      "title": "Let It Be",
+      "card_year": 1970,
+      "year": 1970
+    },
+    {
+      "url": "www.hitstergame.com/nl/00092",
+      "artist": "René Froger",
+      "title": "Alles kan een mens gelukkig maken",
+      "card_year": 1989,
+      "year": 1989
+    },
+    {
+      "url": "www.hitstergame.com/nl/00272",
+      "artist": "Sister Sledge",
+      "title": "We Are Family",
+      "card_year": 1979,
+      "year": 1979
+    },
+    {
+      "url": "www.hitstergame.com/nl/00004",
+      "artist": "Peter Koelewijn & Zijn Rockets",
+      "title": "Kom van dat dak af",
+      "card_year": 1960,
+      "year": 1960
+    },
+    {
+      "url": "www.hitstergame.com/nl/00027",
+      "artist": "Alessia Cara",
+      "title": "Scars to Your Beautiful",
+      "card_year": 2016,
+      "year": 2016
+    },
+    {
+      "url": "www.hitstergame.com/nl/00199",
+      "artist": "Queen & David Bowie",
+      "title": "Under Pressure",
+      "card_year": 1981,
+      "year": 1981
+    },
+    {
+      "url": "www.hitstergame.com/nl/00002",
+      "artist": "Cyndi Lauper",
+      "title": "True Colors",
+      "card_year": 1986,
+      "year": 1986
+    },
+    {
+      "url": "www.hitstergame.com/nl/00167",
+      "artist": "Enrique Iglesias",
+      "title": "Do You Know? (The Ping Pong Song)",
+      "card_year": 2007,
+      "year": 2007
+    },
+    {
+      "url": "www.hitstergame.com/nl/00076",
+      "artist": "Enrico Caruso",
+      "title": "La donna è mobile (Rigoletto)",
+      "card_year": 1908,
+      "year": 1908
+    },
+    {
+      "url": "www.hitstergame.com/nl/00279",
+      "artist": "Les Poppys",
+      "title": "Non, non, rien n'a changé",
+      "card_year": 1971,
+      "year": 1971
+    },
+    {
+      "url": "www.hitstergame.com/nl/00141",
+      "artist": "Natalie Imbruglia",
+      "title": "Torn",
+      "card_year": 1997,
+      "year": 1997
+    },
+    {
+      "url": "www.hitstergame.com/nl/00112",
+      "artist": "Dua Lipa",
+      "title": "Break My Heart",
+      "card_year": 2020,
+      "year": 2020
+    },
+    {
+      "url": "www.hitstergame.com/nl/00147",
+      "artist": "Chuck Berry",
+      "title": "Johnny B. Goode",
+      "card_year": 1958,
+      "year": 1958
+    },
+    {
+      "url": "www.hitstergame.com/nl/00032",
+      "artist": "James Brown",
+      "title": "I Got You (I Feel Good)",
+      "card_year": 1965,
+      "year": 1965
+    },
+    {
+      "url": "www.hitstergame.com/nl/00019",
+      "artist": "Sia",
+      "title": "Cheap Thrills",
+      "card_year": 2015,
+      "year": 2015
+    },
+    {
+      "url": "www.hitstergame.com/nl/00104",
+      "artist": "Tracy Chapman",
+      "title": "Fast Car",
+      "card_year": 1988,
+      "year": 1988
+    },
+    {
+      "url": "www.hitstergame.com/nl/00226",
+      "artist": "Prince",
+      "title": "Purple Rain",
+      "card_year": 1984,
+      "year": 1984
+    },
+    {
+      "url": "www.hitstergame.com/nl/00241",
+      "artist": "Tina Turner",
+      "title": "The Best",
+      "card_year": 1989,
+      "year": 1989
+    },
+    {
+      "url": "www.hitstergame.com/nl/00194",
+      "artist": "Niels Geusebroek",
+      "title": "Take Your Time Girl",
+      "card_year": 2013,
+      "year": 2013
+    },
+    {
+      "url": "www.hitstergame.com/nl/00114",
+      "artist": "Elvis Presley",
+      "title": "Jailhouse Rock",
+      "card_year": 1957,
+      "year": 1957
+    },
+    {
+      "url": "www.hitstergame.com/nl/00108",
+      "artist": "Lynyrd Skynyrd",
+      "title": "Sweet Home Alabama",
+      "card_year": 1974,
+      "year": 1974
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00229",
+      "artist": "Nielson & Miss Montreal",
+      "title": "Hoe",
+      "card_year": 2013,
+      "year": 2013
+    },
+    {
+      "url": "www.hitstergame.com/nl/00247",
+      "artist": "Tones and I",
+      "title": "Dance Monkey",
+      "card_year": 2019,
+      "year": 2019
+    },
+    {
+      "url": "www.hitstergame.com/nl/00034",
+      "artist": "Billy Joel",
+      "title": "Piano Man",
+      "card_year": 1973,
+      "year": 1973
+    },
+    {
+      "url": "www.hitstergame.com/nl/00290",
+      "artist": "The Weeknd",
+      "title": "Blinding Lights",
+      "card_year": 2019,
+      "year": 2019
+    },
+    {
+      "url": "www.hitstergame.com/nl/00210",
+      "artist": "Dorus",
+      "title": "Twee Motten",
+      "card_year": 1957,
+      "year": 1957
+    },
+    {
+      "url": "www.hitstergame.com/nl/00204",
+      "artist": "Paul Simon",
+      "title": "You Can Call Me Al",
+      "card_year": 1986,
+      "year": 1986
+    },
+    {
+      "url": "www.hitstergame.com/nl/00030",
+      "artist": "ABBA",
+      "title": "Waterloo",
+      "card_year": 1974,
+      "year": 1974
+    },
+    {
+      "url": "www.hitstergame.com/nl/00117",
+      "artist": "Las Ketchup",
+      "title": "The Ketchup Song (Aserejé)",
+      "card_year": 2002,
+      "year": 2002
+    },
+    {
+      "url": "www.hitstergame.com/nl/00289",
+      "artist": "Boney M.",
+      "title": "Daddy Cool",
+      "card_year": 1976,
+      "year": 1976
+    },
+    {
+      "url": "www.hitstergame.com/nl/00093",
+      "artist": "Hans de Booij",
+      "title": "Annabel",
+      "card_year": 1983,
+      "year": 1983
+    },
+    {
+      "url": "www.hitstergame.com/nl/00091",
+      "artist": "Bloem",
+      "title": "Even Aan Mijn Moeder Vragen",
+      "card_year": 1980,
+      "year": 1980
+    },
+    {
+      "url": "www.hitstergame.com/nl/00292",
+      "artist": "Davina Michelle",
+      "title": "Duurt te lang",
+      "card_year": 2018,
+      "year": 2018
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00092",
+      "artist": "Carl Douglas",
+      "title": "Kung Fu Fighting",
+      "card_year": 1994,
+      "year": 1974
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00139",
+      "artist": "Los del Río",
+      "title": "Macarena",
+      "card_year": 1993,
+      "year": 1993
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00265",
+      "artist": "Koos Alberts",
+      "title": "Zijn Het Je Ogen",
+      "card_year": 1988,
+      "year": 1988
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00136",
+      "artist": "Cher",
+      "title": "Believe",
+      "card_year": 1998,
+      "year": 1998
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00096",
+      "artist": "Jody Bernal",
+      "title": "Que sí, que no",
+      "card_year": 2000,
+      "year": 2000
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00089",
+      "artist": "Rob de Nijs",
+      "title": "Banger Hart",
+      "card_year": 1996,
+      "year": 1996
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00118",
+      "artist": "Justin Bieber",
+      "title": "Baby",
+      "card_year": 2010,
+      "year": 2010
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00030",
+      "artist": "Survivor",
+      "title": "Eye of the Tiger",
+      "card_year": 1982,
+      "year": 1982
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00104",
+      "artist": "Seal",
+      "title": "Kiss from a Rose",
+      "card_year": 1994,
+      "year": 1994
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00179",
+      "artist": "The Pussycat Dolls",
+      "title": "Don't Cha",
+      "card_year": 2005,
+      "year": 2005
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00182",
+      "artist": "Vengaboys",
+      "title": "We're Going to Ibiza!",
+      "card_year": 1999,
+      "year": 1999
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00289",
+      "artist": "Culture Club",
+      "title": "Karma Chameleon",
+      "card_year": 1983,
+      "year": 1983
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00221",
+      "artist": "MC Hammer",
+      "title": "U Can't Touch This",
+      "card_year": 1989,
+      "year": 1990
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00249",
+      "artist": "Frans Bauer",
+      "title": "Heb Je Even Voor Mij",
+      "card_year": 2002,
+      "year": 2002
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00238",
+      "artist": "De Electronica's",
+      "title": "De Vogeltjesdans",
+      "card_year": 1980,
+      "year": 1980
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00087",
+      "artist": "Robbie Williams",
+      "title": "Angels",
+      "card_year": 1997,
+      "year": 1997
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00296",
+      "artist": "Nick & Simon",
+      "title": "Rosanne",
+      "card_year": 2008,
+      "year": 2008
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00234",
+      "artist": "Jamai",
+      "title": "Step Right Up",
+      "card_year": 2003,
+      "year": 2003
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00196",
+      "artist": "PSY",
+      "title": "Gangnam Style",
+      "card_year": 2012,
+      "year": 2012
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00217",
+      "artist": "Gordon",
+      "title": "Kon Ik Maar Even Bij Je Zijn",
+      "card_year": 1991,
+      "year": 1991
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00274",
+      "artist": "Bee Gees",
+      "title": "Stayin' Alive",
+      "card_year": 1977,
+      "year": 1977
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00147",
+      "artist": "Simon & Garfunkel",
+      "title": "The Sound of Silence",
+      "card_year": 1965,
+      "year": 1965
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00266",
+      "artist": "Kid Rock",
+      "title": "All Summer Long",
+      "card_year": 2008,
+      "year": 2008
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00282",
+      "artist": "FLEMMING",
+      "title": "Automatisch",
+      "card_year": 2022,
+      "year": 2022
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00155",
+      "artist": "Bonnie Tyler",
+      "title": "Total Eclipse of the Heart",
+      "card_year": 1983,
+      "year": 1983
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00297",
+      "artist": "Village People",
+      "title": "Y.M.C.A.",
+      "card_year": 1978,
+      "year": 1978
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00161",
+      "artist": "Dolly Parton",
+      "title": "9 to 5",
+      "card_year": 1980,
+      "year": 1980
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00160",
+      "artist": "John Travolta & Olivia Newton-John",
+      "title": "Summer Nights",
+      "card_year": 1978,
+      "year": 1978
+    },
+    {
+      "url": "www.hitstergame.com/nl/00150",
+      "artist": "Gotye feat. Kimbra",
+      "title": "Somebody That I Used to Know",
+      "card_year": 2011,
+      "year": 2011
+    },
+    {
+      "url": "www.hitstergame.com/nl/00140",
+      "artist": "TOTO",
+      "title": "Africa",
+      "card_year": 1982,
+      "year": 1982
+    },
+    {
+      "url": "www.hitstergame.com/nl/00188",
+      "artist": "Spice Girls",
+      "title": "Stop",
+      "card_year": 1998,
+      "year": 1998
+    },
+    {
+      "url": "www.hitstergame.com/nl/00044",
+      "artist": "Aqua",
+      "title": "Barbie Girl",
+      "card_year": 1997,
+      "year": 1997
+    },
+    {
+      "url": "www.hitstergame.com/nl/00142",
+      "artist": "Céline Dion",
+      "title": "My Heart Will Go On",
+      "card_year": 1997,
+      "year": 1997
+    },
+    {
+      "url": "www.hitstergame.com/nl/00134",
+      "artist": "Rick Astley",
+      "title": "Never Gonna Give You Up",
+      "card_year": 1987,
+      "year": 1987
+    },
+    {
+      "url": "www.hitstergame.com/nl/00198",
+      "artist": "John Legend",
+      "title": "All of Me",
+      "card_year": 2013,
+      "year": 2013
+    },
+    {
+      "url": "www.hitstergame.com/nl/00265",
+      "artist": "KC & the Sunshine Band",
+      "title": "Give It Up",
+      "card_year": 1982,
+      "year": 1982
+    },
+    {
+      "url": "www.hitstergame.com/nl/00243",
+      "artist": "Anita Meyer",
+      "title": "Why Tell Me Why",
+      "card_year": 1981,
+      "year": 1981
+    },
+    {
+      "url": "www.hitstergame.com/nl/00193",
+      "artist": "Adele",
+      "title": "Set Fire to the Rain",
+      "card_year": 2011,
+      "year": 2011
+    },
+    {
+      "url": "www.hitstergame.com/nl/00175",
+      "artist": "The Osmonds",
+      "title": "Crazy Horses",
+      "card_year": 1972,
+      "year": 1972
+    },
+    {
+      "url": "www.hitstergame.com/nl/00073",
+      "artist": "The Trammps",
+      "title": "Disco Inferno",
+      "card_year": 1976,
+      "year": 1976
+    },
+    {
+      "url": "www.hitstergame.com/nl/00010",
+      "artist": "Bob Marley & the Wailers",
+      "title": "No Woman No Cry",
+      "card_year": 1974,
+      "year": 1974
+    },
+    {
+      "url": "www.hitstergame.com/nl/00138",
+      "artist": "Snelle",
+      "title": "Smoorverliefd",
+      "card_year": 2020,
+      "year": 2020
+    },
+    {
+      "url": "www.hitstergame.com/nl/00003",
+      "artist": "Meat Loaf",
+      "title": "Paradise by the Dashboard Light",
+      "card_year": 1978,
+      "year": 1978
+    },
+    {
+      "url": "www.hitstergame.com/nl/00184",
+      "artist": "Maroon 5 feat. Christina Aguilera",
+      "title": "Moves Like Jagger",
+      "card_year": 2011,
+      "year": 2011
+    },
+    {
+      "url": "www.hitstergame.com/nl/00098",
+      "artist": "Pharrell Williams",
+      "title": "Happy",
+      "card_year": 2013,
+      "year": 2013
+    },
+    {
+      "url": "www.hitstergame.com/nl/00181",
+      "artist": "Bruno Mars",
+      "title": "The Lazy Song",
+      "card_year": 2011,
+      "year": 2011
+    },
+    {
+      "url": "www.hitstergame.com/nl/00197",
+      "artist": "Anouk",
+      "title": "Michel",
+      "card_year": 2000,
+      "year": 2000
+    },
+    {
+      "url": "www.hitstergame.com/nl/00021",
+      "artist": "Lukas Graham",
+      "title": "7 Years",
+      "card_year": 2015,
+      "year": 2015
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00305",
+      "artist": "Henk Wijngaard",
+      "title": "Met de vlam in de pijp",
+      "card_year": 1978,
+      "year": 1978
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00304",
+      "artist": "Drukwerk",
+      "title": "Je loog tegen mij",
+      "card_year": 1981,
+      "year": 1981
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00277",
+      "artist": "BLØF",
+      "title": "Alles is liefde",
+      "card_year": 2007,
+      "year": 2007
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00207",
+      "artist": "Zangeres Zonder Naam",
+      "title": "Mexico",
+      "card_year": 1969,
+      "year": 1969
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00166",
+      "artist": "Vader Abraham",
+      "title": "In 't kleine café aan de haven",
+      "card_year": 1975,
+      "year": 1975
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00298",
+      "artist": "The Weather Girls",
+      "title": "It's Raining Men",
+      "card_year": 1982,
+      "year": 1982
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00178",
+      "artist": "Wolter Kroes",
+      "title": "Ik heb de hele nacht liggen dromen",
+      "card_year": 2000,
+      "year": 2000
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00164",
+      "artist": "The Proclaimers",
+      "title": "I'm Gonna Be (500 Miles)",
+      "card_year": 1988,
+      "year": 1988
+    }
+  ],
+  "excluded_urls": [
+    "www.hitstergame.com/nl/00304"
+  ]
+}

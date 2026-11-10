@@ -52,7 +52,11 @@ In het instelscherm kun je een CSV importeren met regels in deze volgorde:
 
 De URL hierboven is fictief. De app accepteert ook meerdere regels en controleert op dubbele URL's. Bestaande kaarten uit `party-state.json` blijven behouden bij een update.
 
-Een gecontroleerde basisbibliotheek kan later afzonderlijk in de repository worden opgenomen. Totdat die beschikbaar is, werkt de **CSV-import** zoals voorheen. De muziekspellen tonen een duidelijke melding als er niet genoeg geschikte kaarten zijn.
+De repository bevat nu **107 gecontroleerde muziekkaarten** in `data/music-library.json`. Deze laden automatisch bij het opstarten, zonder CSV-import. De 108e kaart is uitgesloten omdat de bijbehorende QR-code een ander lied afspeelt. Eerder lokaal geïmporteerde kaarten worden behouden; de meegeleverde bibliotheek corrigeert verouderde artiest-, titel- en jaartalgegevens van overeenkomstige kaarten. Nieuwe kaarten kun je nog steeds via CSV importeren.
+
+Per meegeleverde kaart bewaren we zowel `card_year` (jaar op de fysieke kaart) als `year` (het gecontroleerde quizjaar). Voor de quiz gebruikt de app `year`. Bij de QR-weergave blijft de oorspronkelijke gescande tekst exact intact, ook als de QR-inhoud met `www.` begint en geen `https://` bevat.
+
+De muziekspellen tonen een duidelijke melding als er niet genoeg geschikte kaarten zijn.
 
 ## Antwoordcontrole
 
