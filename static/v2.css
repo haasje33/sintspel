@@ -17,3 +17,31 @@ footer{text-align:center;padding:18px 20px;color:#73879b;font-size:.75rem}.visib
 
 @keyframes flip-quiz{from{transform:rotateY(0)}to{transform:rotateY(180deg)}}
 .single-card.revealed{animation:flip-quiz .9s ease both}
+
+/* Party-night escape hatch: always available to the host, even during the alarm. */
+.topbar.host-topbar{position:sticky;top:0;z-index:80}
+.rescue-wheel{border:1px solid #efb5a7;background:#612b39;color:#fff3e8;font:inherit;font-size:.81rem;font-weight:900;border-radius:12px;padding:10px 14px;cursor:pointer;white-space:nowrap}
+.rescue-wheel:hover,.rescue-wheel:focus-visible{background:#873549;outline:2px solid #f9d493;outline-offset:2px}
+.wheel-turn{margin:14px auto 18px;color:var(--gold);font-size:1.04rem}
+.wheel-phone-spin{width:min(100%,370px);min-height:64px;font-size:1.04rem}
+@media(max-width:600px){.topbar.host-topbar .brand b{display:none}.topbar.host-topbar .roomcode{display:none}.rescue-wheel{padding:9px 10px;font-size:.75rem;white-space:normal}}
+
+/* Game-breaking bug recovery is prominent, but disabling is deliberate. */
+.disable-game{border:1px solid #d1a36b;background:#443b34;color:#ffe8c3;font:inherit;font-size:.78rem;font-weight:800;border-radius:12px;padding:10px 12px;cursor:pointer;white-space:nowrap}
+.disable-game:hover,.disable-game:focus-visible{background:#735044;outline:2px solid #f9d493;outline-offset:2px}
+.game-manager{margin:26px auto 0;max-width:680px;border:1px solid var(--line);border-radius:14px;padding:15px;text-align:left;background:#0d2130}
+.game-manager summary{font-weight:900;color:var(--gold);cursor:pointer}
+.game-management-row{display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap}
+.game-management-row .text-input{flex:1 1 180px;width:auto;max-width:420px}
+.game-management-row .btn{flex:0 0 auto}
+@media(max-width:650px){.topbar.host-topbar{flex-wrap:wrap}.topbar.host-topbar .head-right{flex-wrap:wrap;justify-content:flex-end}.disable-game{padding:9px 10px;font-size:.74rem;white-space:normal}}
+
+/* Independent, always-on host emergency panel (not rendered by v2.js). */
+#emergency-panel[hidden],#emergency-panel [hidden]{display:none!important}
+#emergency-panel{position:fixed;right:16px;bottom:16px;z-index:9999;display:flex;flex-wrap:wrap;align-items:center;gap:8px;max-width:min(98vw,690px);padding:12px;border:2px solid #f1c57f;border-radius:16px;background:#142337;box-shadow:0 8px 38px #000b}
+#emergency-panel button{background:#762b3a;color:#fff6eb;font:inherit;font-size:.9rem;font-weight:900;border-radius:10px;border:1px solid #edafa7;padding:11px 15px;cursor:pointer}
+#emergency-panel #emergency-disable{background:#543d32;border-color:#e0b780}
+#emergency-panel button:hover:not(:disabled){filter:brightness(1.23)}
+#emergency-panel button:disabled{opacity:.55}
+#emergency-message{font-size:.83rem;max-width:290px;color:#f8d9a4}
+@media(max-width:600px){#emergency-panel{right:6px;bottom:6px;left:6px;padding:7px;justify-content:center}#emergency-panel button{font-size:.77rem;padding:8px 10px}}

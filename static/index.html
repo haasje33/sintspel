@@ -10,6 +10,64 @@
 <body>
   <div id="app"><div class="loading"><span class="huge">🎁</span><p>De pakjesavond wordt klaargezet…</p></div></div>
   <div id="toast" role="status" aria-live="polite"></div>
+  <!-- Independent host safety controls: survive a broken main game client. -->
+  <div id="emergency-panel" hidden aria-label="Noodbediening spelleider">
+    <button id="emergency-wheel" type="button">↩ Terug naar het rad</button>
+    <button id="emergency-disable" type="button" hidden>⛔ Spel uitschakelen</button>
+    <span id="emergency-message" role="status" aria-live="polite"></span>
+  </div>
+  <script>
+  (() => {
+    if (location.pathname !== '/host') return;
+    const hostKey = new URLSearchParams(location.search).get('key');
+    if (!hostKey) return;
+    const panel = document.getElementById('emergency-panel');
+    const wheel = document.getElementById('emergency-wheel');
+    const disable = document.getElementById('emergency-disable');
+    const message = document.getElementById('emergency-message');
+    panel.hidden = false;
+    async function command(action) {
+      wheel.disabled = true;
+      disable.disabled = true;
+      message.textContent = 'Moment…';
+      try {
+        const response = await fetch('/api/admin', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json','X-Admin-Key':hostKey},
+          body: JSON.stringify({action})
+        });
+        const result = await response.json();
+        if (!response.ok || result.error) throw Error(result.error || 'Noodbediening mislukt.');
+        location.reload();
+      } catch(error) {
+        message.textContent = error.message || 'Onbekende fout';
+        wheel.disabled = false;
+        disable.disabled = false;
+      }
+    }
+    wheel.addEventListener('click', () => command('v2_return_wheel'));
+    disable.addEventListener('click', () => {
+      if (confirm('Dit spel voor de rest van deze spelavond uitschakelen en teruggaan naar het rad?')) {
+        command('v2_disable_game');
+      }
+    });
+    async function updateControls() {
+      try {
+        const response = await fetch('/api/state?key='+encodeURIComponent(hostKey),{cache:'no-store'});
+        if (!response.ok) return;
+        const state = await response.json();
+        const show = state.show || {};
+        const mode = show.mode;
+        wheel.hidden = ['setup','wheel','finished'].includes(mode);
+        disable.hidden = !(mode === 'game' || mode === 'spinning' ||
+          (mode === 'gift' && show.gift && show.gift.category !== 'grocery'));
+        if (!wheel.hidden || !disable.hidden) panel.hidden = false;
+      } catch(_) { /* Keep emergency recovery available while polling is broken. */ }
+    }
+    updateControls();
+    setInterval(updateControls,1500);
+  })();
+  </script>
   <script src="/v2.js" defer></script>
 </body>
 </html>

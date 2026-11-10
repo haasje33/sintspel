@@ -64,6 +64,12 @@ De muziektitels en artiestennamen worden in hun officiële spelling getoond. Bij
 
 Bij de einduitslag kan de host foutgerekende antwoorden alsnog goedkeuren of eerdere beoordelingen aanpassen. Pas na **Uitslag bevestigen** begint de cadeau-uitdeling. Bevestigde alternatieve muziekantwoorden kunnen worden onthouden zonder de officiële weergavenaam te wijzigen.
 
+## Voorkomen dat de spelavond vastloopt
+
+Op de **hostlaptop** staat rechts onderin een aparte noodbediening, onafhankelijk van de gewone spelinterface. **Terug naar het rad** breekt het huidige onderdeel direct af, zonder bevestigingsdialoog en zonder eerder uitgedeelde cadeaus te wissen. **Spel uitschakelen** vraagt bevestiging, sluit een probleemspel af en haalt het **voor de rest van de lopende avond** uit alle volgende radcycli. Spellen kun je vanaf het rad via **Spellen beheren** ook vooraf uitschakelen of later opnieuw inschakelen. Als alle zeven spellen uitstaan, kun je vanuit dit menu weer een spel inschakelen.
+
+Het rad mag beurtelings door de vier spelers **vanaf hun eigen telefoon** worden gedraaid. De beurt wisselt na een geslaagde draai; de host kan altijd namens een speler draaien als diens telefoon niet beschikbaar is. De noodstop kan ook een vastgelopen cadeau-uitdeling of boodschappenfase afbreken. Reeds gegeven cadeaus blijven staan; nog niet gegeven cadeaus in die uitdeling worden overgeslagen. Bij het overslaan van een vastgelopen boodschappenfase wordt de verrassing voor deze avond afgesloten.
+
 ## Opslag, netwerk en updates
 
 De server bewaart voortgang, telefoonverbindingen, punten, cadeauverdeling en de stand van het verrassingsspel in `party-state.json` (lokaal; niet committen). De beheerlink wordt beveiligd met `.host-key`. Ook de bestaande kaartencollectie in de lokale spelstand blijft geladen.

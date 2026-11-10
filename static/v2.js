@@ -36,7 +36,7 @@ function sound(){if(!audioEnabled)return;try{
  o.start(t);o.stop(t+.14);});
 }catch(e){console.warn('Geluid niet beschikbaar',e);}}
 function decorate(){return `<div class="decor star-one">✦</div><div class="decor star-two">✦</div><div class="decor star-three">✦</div>`;}
-function header(){return `<header class="topbar"><div class="brand"><span class="brand-signet">🎁</span><div><b>DE GROTE</b><strong>SINTERKLAAS SPELLENAVOND</strong></div></div>
+function header(){return `<header class="topbar ${isHost?'host-topbar':''}"><div class="brand"><span class="brand-signet">🎁</span><div><b>DE GROTE</b><strong>SINTERKLAAS SPELLENAVOND</strong></div></div>
 <div class="head-right"><span class="head-label">${page==='host'?'🎛 Spelleider':page==='screen'?'📺 Spelshow':'📱 Speler'}</span><span class="roomcode">CODE ${html(state.room)}</span>${page==='screen'?'<button class="sound-toggle" data-enable-sound>🔈 Geluid aanzetten</button>':''}</div></header>`;}
 function scoreboard(){const show=state.show;return `<aside class="sidebar">
 <h3>🎁 De cadeauzak</h3><div class="gift-progress"><div class="gift-fill" style="width:${Math.max(0,100-100*show.remaining_gifts/Math.max(1,state.players.reduce((t,p)=>t+p.target,0)))}%"></div></div>
@@ -69,16 +69,22 @@ ${state.players.map(p=>`<div class="check-row"><span>${name(p.id)}</span><strong
 <form id="csv-import"><label>CSV met URL, artiest, titel, jaar<input id="csv-file" class="text-input" type="file" accept=".csv,.txt,text/csv" required></label><button class="btn alt" type="submit">📥 Importeer kaarten</button></form>
 ${importNotice?`<div class="message">${html(importNotice)}</div>`:''}
 ${cards.length?`<details><summary>${cards.length} kaarten bekijken en QR testen</summary><div class="library-rows">${cards.slice(-100).reverse().map(c=>`<div class="library-row"><span>${html(c.artist)} — ${html(c.title)} (${c.year})</span><a href="/hitster/test?id=${encodeURIComponent(c.id)}&key=${encodeURIComponent(key)}" target="_blank" rel="noopener">Test QR</a></div>`).join('')}</div></details>`:''}</div></div>`;}
-function wheel(){const sh=state.show,spinning=sh.mode==='spinning',bag=spinning&&sh.spin?.options?.length?sh.spin.options:(sh.bag.length?sh.bag:sh.games.map(c=>c.id));
+function wheel(){const sh=state.show,spinning=sh.mode==='spinning',bag=spinning&&sh.spin?.options?.length?sh.spin.options:(sh.bag.length?sh.bag:sh.enabled_games);
  const palette=bag.map(id=>cat(id).color);const grad=palette.map((color,i)=>`${color} ${(i*360/bag.length).toFixed(2)}deg ${((i+1)*360/bag.length).toFixed(2)}deg`).join(',');
  const winningIndex=spinning?bag.indexOf(sh.spin.category):0;
  const stopAngle=2520-360*(winningIndex+.5)/bag.length;
+ const spinner=sh.spin_player;
+ const spinnerName=spinner?name(spinner):'de volgende speler';
  const opts=bag.map((id,i)=>`<div class="wheel-label" style="--pos:${i};--total:${bag.length}">${cat(id).icon}<small>${html(cat(id).name)}</small></div>`).join('');
  return `<div class="stage-card wheel-stage"><p class="eyebrow">🎡 ${sh.regular_completed+1}e minigame</p><h1>${spinning?'Welk spel wordt het?':'Draai aan het rad!'}</h1>
- <div class="wheel-wrap"><div class="wheel-pointer"></div><div class="wheel-disc ${spinning?'spinning':''}" style="background:conic-gradient(${grad});--segments:${bag.length};--wheel-target:${stopAngle}deg">${opts}<div class="wheel-hub">🎁</div></div></div>
- ${spinning?`<h2 class="result-banner">${cat(sh.spin.category).icon} ${html(cat(sh.spin.category).name)}</h2>`:`<p class="subtle">Iedere minigame verdwijnt na het spelen van het rad, tot alle zeven gespeeld zijn.</p>`}
- ${isHost?(spinning?button('v2_open_game','✨ Start het gekozen spel','gold'):button('v2_spin','🎡 Draai aan het rad!','gold')):''}
- ${isHost&&!spinning?`<div class="test-picker"><span>Rechtstreeks testen:</span><select id="quick-game" class="text-input">${bag.map(id=>`<option value="${id}">${cat(id).icon} ${html(cat(id).name)}</option>`).join('')}</select>${button('v2_direct','Start gekozen spel','alt')}</div>`:''}
+ ${bag.length?`<div class="wheel-wrap"><div class="wheel-pointer"></div><div class="wheel-disc ${spinning?'spinning':''}" style="background:conic-gradient(${grad});--segments:${bag.length};--wheel-target:${stopAngle}deg">${opts}<div class="wheel-hub">🎁</div></div></div>`:'<div class="waiting">Alle spellen zijn uitgeschakeld. De spelleider kan er hieronder één opnieuw inschakelen.</div>'}
+ ${spinning?`<h2 class="result-banner">${cat(sh.spin.category).icon} ${html(cat(sh.spin.category).name)}</h2>`:`<p class="subtle">Iedere minigame verdwijnt na het spelen van het rad, tot alle zeven gespeeld zijn.</p><p class="wheel-turn">🎡 <strong>${spinnerName}</strong> is aan de beurt om te draaien.</p>`}
+ ${isPhone?(spinning?'<p class="waiting">Het rad draait! Kijk naar de TV.</p>':bag.length===0?'<p class="waiting">De spelleider schakelt een spel in…</p>':state.me===spinner?button('v2_spin','🎡 Geef het rad een slinger!','gold wheel-phone-spin'):`<p class="waiting">Wacht op ${spinnerName}…</p>`):''}
+ ${isHost?(spinning?button('v2_open_game','✨ Start het gekozen spel','gold'):bag.length?button('v2_spin',`🎡 Draai namens ${spinnerName}`,'gold'):''):''}
+ ${isHost&&!spinning?`<div class="test-picker"><span>Rechtstreeks testen:</span><select id="quick-game" class="text-input">${bag.map(id=>`<option value="${id}">${cat(id).icon} ${html(cat(id).name)}</option>`).join('')}</select>${bag.length?button('v2_direct','Start gekozen spel','alt'):''}</div>`:''}
+ ${isHost&&!spinning?`<details class="game-manager"><summary>⚙ Spellen beheren (bij problemen)</summary>
+ ${sh.enabled_games.length?`<div class="game-management-row"><select id="disable-select" class="text-input">${sh.enabled_games.map(id=>`<option value="${id}">${cat(id).name}</option>`).join('')}</select>${button('v2_disable_game','⛔ Uit het rad halen','soft-btn')}</div>`:''}
+ ${sh.disabled_games?.length?`<div class="game-management-row"><select id="enable-select" class="text-input">${sh.disabled_games.map(id=>`<option value="${id}">${cat(id).name}</option>`).join('')}</select>${button('v2_enable_game','↶ Opnieuw inschakelen','alt')}</div>`:'<p class="subtle">Alle spellen zijn momenteel ingeschakeld.</p>'}</details>`:''}
  </div>`;}
 function topGame(g){return `<div class="game-head"><p class="eyebrow">${cat(g.category).icon} ${html(cat(g.category).name)}</p>${pill('Vraag '+(g.index+1)+' / '+g.total)}${pill(g.phase==='review'?'Einduitslag':g.phase==='reveal'?'Antwoord':'Speelronde')}</div>`;}
 function cardsRow(r,phase){if(!r.ref)return '';
@@ -238,8 +244,8 @@ function viewScreen(){if(page==='home')return home();if(!state)return '<div clas
  return shell(content,!isPhone && mode!=='grocery_alarm' && mode!=='grocery_study');}
 function renderHash(){const s=state,sh=s?.show,g=sh?.game,r=g?.current;
  if(!sh)return 'none';
- if(isPhone)return JSON.stringify([sh.mode,sh.gifts_given,g?.category,g?.phase,g?.index,r?.stage,r?.my_answer,r?.my_vote,r?.my_attempts?.length,r?.deadline,r?.chooser,r?.investigator,r?.guess,sh.grocery?.phase,sh.grocery?.my_response?.length,s?.me]);
- return JSON.stringify([sh.mode,sh.gifts_given,sh.bag,sh.regular_completed,g?.category,g?.phase,g?.index,g?.scores,r?.stage,r?.submitted,r?.voted,r?.deadline,r?.revealed,r?.all_answers,r?.all_attempts,sh.grocery?.phase,sh.grocery?.responses_count,sh.gift?.winner_index,sh.gift?.choice_index,s?.players.map(p=>p.received),sh.hitster_count,sh.has_story]);
+ if(isPhone)return JSON.stringify([sh.mode,sh.spin_player,sh.enabled_games,sh.disabled_games,sh.gifts_given,g?.category,g?.phase,g?.index,r?.stage,r?.my_answer,r?.my_vote,r?.my_attempts?.length,r?.deadline,r?.chooser,r?.investigator,r?.guess,sh.grocery?.phase,sh.grocery?.my_response?.length,s?.me]);
+ return JSON.stringify([sh.mode,sh.spin_player,sh.enabled_games,sh.disabled_games,sh.gifts_given,sh.bag,sh.regular_completed,g?.category,g?.phase,g?.index,g?.scores,r?.stage,r?.submitted,r?.voted,r?.deadline,r?.revealed,r?.all_answers,r?.all_attempts,sh.grocery?.phase,sh.grocery?.responses_count,sh.gift?.winner_index,sh.gift?.choice_index,s?.players.map(p=>p.received),sh.hitster_count,sh.has_story]);
 }
 function setCountdowns(){document.querySelectorAll('[data-countdown]').forEach(el=>{
  const deadline=Number(el.dataset.countdown);if(!deadline)return;
@@ -299,6 +305,15 @@ async function act(b){if(busy)return;const action=b.dataset.act;busy=true;b.disa
   }else if(action==='v2_reset'){
    if(prompt('Dit wist de spelstand, maar bewaart de muziekbibliotheek en weetjes. Typ RESET:')!=='RESET')return;
    await host(action,{confirmation:'RESET'});
+  }else if(action==='v2_disable_game'){
+    const category=game()?.category||state?.show?.gift?.category||$('#disable-select')?.value;
+    if(!category)throw Error('Geen spel geselecteerd.');
+    if(!confirm(`Spel ${cat(category).name} voor de rest van deze spelavond uitschakelen?`))return;
+    await host(action,{category});
+  }else if(action==='v2_enable_game'){
+    await host(action,{category:$('#enable-select')?.value});
+  }else if(action==='v2_spin'){
+    if(isPhone)await send(action);else await host(action);
   }else if(action==='v2_choose'){
    const value=b.dataset.value;
    if(isPhone)await send(action,{value});else await host(action,{value});

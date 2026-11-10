@@ -134,7 +134,7 @@ def same_answer(guess,answer,kind='title',aliases=None):
 
 def new_show():
     return {'version':2,'mode':'setup','bag':[],'used_hidden':[],'recent':[],
-            'game':None,'spin':None,'grocery':{'phase':'pending','items':[],
+            'game':None,'spin':None,'spin_turn':0,'disabled_games':[],'grocery':{'phase':'pending','items':[],
             'first_after':RNG.choice([1,2]),'recall_after':None,'deadline':None,
             'responses':{},'review':{}},
             'regular_completed':0,'gifts_given':0,'gift':None,'last_gift':None,
@@ -147,6 +147,8 @@ def ensure(s):
     sh=s['show2']
     sh.setdefault('stories',{})
     sh.setdefault('aliases',{})
+    sh.setdefault('spin_turn',0)  # Existing saved evenings predate phone wheel turns.
+    sh.setdefault('disabled_games',[])
     return sh
 
 
@@ -442,6 +444,7 @@ def gift_start(s,winners,category):
     sh=ensure(s)
     sh['gift']={'winners':winners,'winner_index':0,'choice_index':0,
                 'category':category,'awarded':[]}
+    sh['last_gift']=None  # Undo must never apply to the preceding game.
     sh['game']=None
     sh['mode']='gift'
 
@@ -469,6 +472,50 @@ def gift_next(s):
         if category!='grocery':sh['regular_completed']+=1
         sh['gift']=None
         trigger_transition(s)
+
+
+def return_to_wheel(s, disabled=False):
+    """Emergency exit for the host, independent of normal game phase guards.
+
+    An unfinished game is replayable and its wheel turn is restored. During
+    gifting, only unissued rewards are skipped; physical gifts already given
+    remain registered. A faulty groceries event cannot trap the evening.
+    """
+    sh=ensure(s)
+    mode=sh['mode']
+    if mode in ('setup','finished'):
+        raise ValueError('Het spelrad is niet beschikbaar buiten een lopende spelavond.')
+    if mode in ('spinning','game'):
+        g=sh.get('game')
+        if g:
+            category=g['category']
+            if category not in sh['bag'] and category not in sh['disabled_games']:
+                sh['bag'].append(category)
+            sh['used_hidden']=list(g.get('pre_used',sh['used_hidden']))
+            if sh['recent'] and sh['recent'][-1]==category:sh['recent'].pop()
+        spin=sh.get('spin') or {}
+        if not disabled and spin.get('turn_before') is not None:
+            sh['spin_turn']=spin['turn_before']
+    elif mode=='gift':
+        gift=sh.get('gift')
+        if gift:
+            category=gift['category']
+            sh['round_history'].append({'category':category,'winners':gift['winners'],
+                       'points':gift.get('scores',{}),'at':time.time(),'gifts_skipped':True})
+            if category!='grocery':sh['regular_completed']+=1
+    elif mode.startswith('grocery_'):
+        gr=sh['grocery']
+        # A broken surprise must never trap the evening or retrigger endlessly.
+        if gr['phase'] in ('alarm_intro','study'):
+            gr['items']=[]
+        gr['phase']='complete'
+        gr['deadline']=None
+    sh['game']=None
+    sh['spin']=None
+    sh['gift']=None
+    sh['last_gift']=None
+    sh['mode']='finished' if all_done(s) else 'wheel'
+    return {'returned':True,'mode':sh['mode'],'previous_mode':mode}
 
 
 def gift_requirement(s):
@@ -520,12 +567,17 @@ def admin(s,payload,save):
             if p['target']==0:p['target']=9
             p['received']=0;p['wins']=0
         sh['gifts_given']=0
+        sh['spin_turn']=0
+        sh['disabled_games']=[]
         sh['mode']='wheel'
         return done({'started':True})
     if act in ('v2_spin','v2_direct'):
         if sh['mode']!='wheel':raise ValueError('Wacht tot het volgende spel.')
+        enabled=[g['id'] for g in GAMES if g['id'] not in sh['disabled_games']]
+        sh['bag']=[g for g in sh['bag'] if g in enabled]
+        if not enabled:raise ValueError('Alle minigames zijn uitgeschakeld. Schakel er één opnieuw in.')
         if not sh['bag']:
-            sh['bag']=[g['id'] for g in GAMES];RNG.shuffle(sh['bag'])
+            sh['bag']=enabled[:];RNG.shuffle(sh['bag'])
         chosen=(RNG.choice(sh['bag']) if act=='v2_spin' else str(payload.get('category','')))
         if chosen not in sh['bag']:raise ValueError('Dit spel is al gespeeld in de huidige cyclus.')
         # Check availability before consuming a wheel position.
@@ -534,20 +586,39 @@ def admin(s,payload,save):
         sh['bag'].remove(chosen)
         sh['recent'].append(chosen)
         sh['game']=game
-        sh['spin']={'category':chosen,'options':before_bag,'at':time.time()}
+        old_turn=sh['spin_turn'] if act=='v2_spin' else None
+        sh['spin']={'category':chosen,'options':before_bag,'at':time.time(),
+                    'turn_before':old_turn}
+        if act=='v2_spin':sh['spin_turn']+=1
         sh['mode']='spinning' if act=='v2_spin' else 'game'
         return done({'category':chosen})
     if act=='v2_open_game':
         if sh['mode']!='spinning':raise ValueError('Het spelrad draait niet.')
         sh['mode']='game';return done({'started':True})
-    if act=='v2_cancel':
-        if sh['mode'] not in ('game','spinning'):raise ValueError('Er loopt geen minigame.')
-        if sh['game']:
-            c=sh['game']['category']
-            if c not in sh['bag']:sh['bag'].append(c)
-            sh['used_hidden']=sh['game'].get('pre_used',sh['used_hidden'])[:]  # Test run does not consume songs.
-        sh['game']=None;sh['mode']='wheel';sh['spin']=None
-        return done({'cancelled':True})
+    if act in ('v2_cancel','v2_return_wheel'):
+        if act=='v2_cancel' and sh['mode'] not in ('game','spinning'):
+            raise ValueError('Er loopt geen minigame.')
+        return done(return_to_wheel(s))
+    if act=='v2_disable_game':
+        category=str(payload.get('category') or '')
+        if sh['mode'] in ('game','spinning') and sh.get('game'):
+            category=sh['game']['category']
+        elif sh['mode']=='gift' and sh.get('gift'):
+            category=sh['gift']['category']
+        if category not in GAME_IDS:raise ValueError('Kies een geldig minigame om uit te schakelen.')
+        if sh['mode'] in ('setup','finished'):raise ValueError('Er is geen lopende spelavond.')
+        if category not in sh['disabled_games']:sh['disabled_games'].append(category)
+        sh['bag']=[g for g in sh['bag'] if g!=category]
+        if sh['mode'] in ('game','spinning','gift'):
+            return done({'disabled':category,**return_to_wheel(s,disabled=True)})
+        return done({'disabled':category,'mode':sh['mode']})
+    if act=='v2_enable_game':
+        if sh['mode']!='wheel':raise ValueError('Spellen herinschakelen kan vanaf het rad.')
+        category=str(payload.get('category') or '')
+        if category not in sh['disabled_games']:raise ValueError('Dit minigame is niet uitgeschakeld.')
+        sh['disabled_games'].remove(category)
+        if category not in sh['bag']:sh['bag'].append(category)
+        return done({'enabled':category})
     if act=='v2_choose':
         g,r=current(sh)
         if sh['mode']!='game' or g['phase']!='choose':raise ValueError('Er is nu niets te kiezen.')
@@ -784,6 +855,12 @@ def submit(s,payload,pid,save):
                 answers.append(cleaned[:75])
         gr['responses'][pid]=answers[:30]
         save();return {'saved':len(gr['responses'][pid])}
+    if act=='v2_spin':
+        if sh['mode']!='wheel':raise ValueError('Het rad is nu niet beschikbaar.')
+        ids=player_ids(s)
+        if not ids or pid!=ids[sh['spin_turn']%len(ids)]:
+            raise ValueError('Een andere speler mag nu aan het rad draaien.')
+        return admin(s,payload,save)
     if sh['mode']!='game':raise ValueError('Er is geen actieve minigame.')
     g,r=current(sh);cat=g['category']
     if act=='v2_choose':
@@ -901,7 +978,11 @@ def masked_round(s,g,r,is_admin,pid):
 
 def view(s,is_admin=False,pid=None):
     sh=ensure(s);v={'version':2,'mode':sh['mode'],'games':GAMES,'bag':list(sh['bag']),
-                   'recent':sh['recent'][-7:],'spin':sh['spin'],'regular_completed':sh['regular_completed'],
+                   'recent':sh['recent'][-7:],'spin':sh['spin'],
+                   'disabled_games':list(sh['disabled_games']),
+                   'enabled_games':[g['id'] for g in GAMES if g['id'] not in sh['disabled_games']],
+                   'spin_player':player_ids(s)[sh['spin_turn']%len(player_ids(s))] if player_ids(s) else None,
+                   'regular_completed':sh['regular_completed'],
                    'gifts_given':sh['gifts_given'],'remaining_gifts':remaining(s),
                    'has_story':{p['id']:bool(sh['stories'].get(p['id'])) for p in s['players']},
                    'game':None,'grocery':None,'gift':None}
@@ -917,22 +998,3 @@ def view(s,is_admin=False,pid=None):
     if sh['mode'].startswith('grocery_'):
         gr=sh['grocery'];v['grocery']={'phase':gr['phase'],'deadline':gr['deadline'],
                                      'responses_count':len(gr['responses'])}
-        if gr['phase'] in ('study','review'):
-            v['grocery']['items']=list(gr['items'])
-        if gr['phase']=='review':
-            v['grocery']['review']=copy.deepcopy(gr['review']) if is_admin else {pid:gr['review'].get(pid)} if pid else {}
-        if pid:v['grocery']['my_response']=gr['responses'].get(pid,[])
-    if sh['mode']=='gift' and sh['gift']:
-        gift=sh['gift'];need=gift_requirement(s)
-        v['gift']={'winners':gift['winners'],'winner_index':gift['winner_index'],
-                   'choice_index':gift['choice_index'],'awarded':gift['awarded'],
-                   'category':gift['category'],'scores':gift.get('scores',{}),
-                   'requirement':need}
-    if is_admin:
-        v['stories']=copy.deepcopy(sh['stories']) if sh['mode'] in ('setup','wheel') else {}
-        v['hitster_count']=len(s.get('hitster_cards',[]))
-        v['hitster_cards']=copy.deepcopy(s.get('hitster_cards',[])) if sh['mode']=='setup' else []
-    if sh['mode']=='game' and v['game']['category']=='quiz' and v['game']['phase']=='answer':
-        v['suggestions']={'artist':sorted({c['artist'] for c in s.get('hitster_cards',[])},key=str.lower),
-                          'title':sorted({c['title'] for c in s.get('hitster_cards',[])},key=str.lower)}
-    return v

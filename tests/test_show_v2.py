@@ -35,6 +35,88 @@ class ShowTests(unittest.TestCase):
             if need is None:break
             self.a('v2_give',recipient=need['eligible'][0])
 
+    def test_phone_spin_rotates_and_host_is_fallback(self):
+        self.assertEqual(game.view(self.s,pid='p1')['spin_player'],'p1')
+        with self.assertRaises(ValueError):self.p('p2','v2_spin')
+        self.p('p1','v2_spin')
+        self.assertEqual(self.s['show2']['mode'],'spinning')
+        self.assertEqual(game.view(self.s,pid='p1')['spin_player'],'p2')
+        game.admin(self.s,{'action':'v2_open_game'},self.save)
+        self.a('v2_return_wheel')
+        self.assertEqual(self.s['show2']['mode'],'wheel')
+        self.assertEqual(game.view(self.s,pid='p1')['spin_player'],'p1')
+        self.a('v2_spin')  # Host spins on behalf of the missing phone.
+        self.assertEqual(game.view(self.s,pid='p2')['spin_player'],'p2')
+        self.a('v2_open_game')
+        game.gift_start(self.s,['p1'],'dice')
+        self.a('v2_return_wheel')
+        self.assertEqual(game.view(self.s,pid='p1')['spin_player'],'p2')
+
+    def test_escape_from_partial_gifting_keeps_awards(self):
+        self.start('dice')
+        game.gift_start(self.s,['p1','p2'],'dice')
+        self.a('v2_give',recipient='p1')
+        self.assertEqual(self.s['players'][0]['received'],1)
+        self.a('v2_return_wheel')
+        self.assertEqual(self.s['show2']['mode'],'wheel')
+        self.assertEqual(self.s['players'][0]['received'],1)
+        self.assertEqual(self.s['show2']['gifts_given'],1)
+        self.assertEqual(self.s['show2']['regular_completed'],1)
+        self.assertTrue(self.s['show2']['round_history'][-1]['gifts_skipped'])
+        self.a('v2_return_wheel')  # Wheel escape is harmless if clicked twice.
+        self.assertEqual(self.s['show2']['gifts_given'],1)
+
+    def test_escape_during_grocery_study_and_recall(self):
+        sh=self.s['show2']
+        sh['mode']='grocery_study';sh['grocery']['phase']='study'
+        sh['grocery']['items']=['brood'];sh['grocery']['deadline']=9999999
+        self.a('v2_return_wheel')
+        self.assertEqual(sh['mode'],'wheel')
+        self.assertEqual(sh['grocery']['phase'],'complete')
+        self.assertEqual(sh['grocery']['items'],[])
+        sh['mode']='grocery_recall';sh['grocery']['phase']='recall'
+        self.a('v2_return_wheel')
+        self.assertEqual(sh['mode'],'wheel')
+        self.assertEqual(sh['grocery']['phase'],'complete')
+        self.assertIsNone(sh['grocery']['deadline'])
+
+    def test_disable_buggy_game_removes_it_for_the_evening(self):
+        self.a('v2_spin')
+        bad=self.s['show2']['game']['category']
+        self.a('v2_open_game')
+        self.a('v2_disable_game')
+        sh=self.s['show2']
+        self.assertEqual(sh['mode'],'wheel')
+        self.assertIn(bad,sh['disabled_games'])
+        self.assertNotIn(bad,sh['bag'])
+        self.assertNotIn(bad,game.view(self.s)['enabled_games'])
+        for _ in range(3):
+            if sh['mode']=='wheel':self.a('v2_spin')
+            self.assertNotEqual(sh['game']['category'],bad)
+            self.a('v2_open_game')
+            self.a('v2_return_wheel')
+        self.assertIn(bad,sh['disabled_games'])
+        self.a('v2_enable_game',category=bad)
+        self.assertNotIn(bad,sh['disabled_games'])
+        self.assertIn(bad,sh['bag'])
+
+    def test_can_disable_all_and_reenable_one(self):
+        for item in game.GAMES:self.a('v2_disable_game',category=item['id'])
+        self.assertEqual(game.view(self.s)['enabled_games'],[])
+        with self.assertRaisesRegex(ValueError,'uitgeschakeld'):self.a('v2_spin')
+        self.a('v2_enable_game',category='dice')
+        self.a('v2_spin')
+        self.assertEqual(self.s['show2']['game']['category'],'dice')
+
+    def test_disabling_during_gifting_keeps_given_gifts(self):
+        self.start('dice')
+        game.gift_start(self.s,['p1','p2'],'dice')
+        self.a('v2_give',recipient='p1')
+        self.a('v2_disable_game',category='dice')
+        self.assertEqual(self.s['show2']['gifts_given'],1)
+        self.assertEqual(self.s['show2']['mode'],'wheel')
+        self.assertIn('dice',self.s['show2']['disabled_games'])
+
     def test_fuzzy_examples(self):
         for a,b,k in [('queen','Queen','artist'),('Police','The Police','artist'),
                       ('Simon en Garfunkel','Simon & Garfunkel','artist'),
