@@ -60,7 +60,7 @@ def parse_cards_csv(content, known_urls=(), available_slots=MAX_CARDS):
             try:
                 parsed = urlsplit(url)
                 full_url = parsed.scheme.lower() in ('http', 'https') and bool(parsed.hostname)
-                bare_qr = bool(re.fullmatch(r'www\\.[a-z0-9.-]+\\.[a-z]{2,}/\\S+', url, re.I))
+                bare_qr = bool(re.fullmatch(r'www\.[a-z0-9.-]+\.[a-z]{2,}/\S+', url, re.I))
                 if (not (full_url or bare_qr)
                     or any(ch.isspace() or ord(ch) < 32 for ch in url)
                     or len(url.encode('utf-8')) > 1500):

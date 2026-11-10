@@ -181,8 +181,8 @@ def load_packaged_library(s,path):
         # their bytes by prepending https:// during import or QR generation.
         if any(c.isspace() or ord(c)<32 for c in url) or len(url.encode('utf-8'))>1500:
             return False
-        if re.match(r'^https?://[^/\\s]+/',url,re.I):return True
-        return bool(re.match(r'^www\\.[a-z0-9.-]+\\.[a-z]{2,}/[^\\s]+$',url,re.I))
+        if re.match(r'^https?://[^/\s]+/',url,re.I):return True
+        return bool(re.match(r'^www\.[a-z0-9.-]+\.[a-z]{2,}/[^\s]+$',url,re.I))
 
     excluded_keys={identity(x) for x in excluded if isinstance(x,str) and valid(x)}
     existing=s.setdefault('hitster_cards',[])
