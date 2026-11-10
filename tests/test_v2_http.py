@@ -22,7 +22,7 @@ def main():
         with urllib.request.urlopen(qr_url,timeout=8) as response:
             assert response.status==200
             assert response.headers.get_content_type()=='image/png'
-            assert response.read(8)==b'\\x89PNG\\r\\n\\x1a\\n'
+            assert response.read(8)==b'\x89PNG\r\n\x1a\n'
         ad('v2_reset',confirmation='RESET')
         st=get();assert st['host_authorized'] and st['show']['mode']=='setup'
         assert isinstance(st['show'],dict) and st['show']['hitster_count']>=100
