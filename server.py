@@ -538,34 +538,8 @@ class Handler(BaseHTTPRequestHandler):
             is_admin=(q.get('key',[''])[0]==ADMIN_KEY)
             view='host' if is_admin else 'player'
             with LOCK:self.jsonout(sanitized(view,q.get('token',[''])[0]));return
-        if path=='/api/v2/state':
-            is_admin=q.get('key',[''])[0]==ADMIN_KEY
-            current=player(q.get('token',[''])[0])
-            with LOCK:self.jsonout(show.public(S,is_admin,current['id'] if current else None))
-            return
         if path=='/api/health':
             self.jsonout({'ok':True,'room':S['room']});return
-        if path=='/v2/qr.png':
-            card_id=q.get('id',[''])[0]
-            with LOCK:
-                card=next((c for c in show.cards(S) if c['id']==card_id),None)
-                v=show.ensure(S)
-                g=v.get('game') or {}
-                active=(v.get('mode')=='game' and g.get('category') in ('classic','quiz') and
-                        (g.get('question') or {}).get('card_id')==card_id)
-                admin_access=q.get('key',[''])[0]==ADMIN_KEY
-            if not card or not (admin_access or active):
-                self.send_error(404);return
-            try:data=qr_png(card['url'])
-            except (ValueError,OverflowError):
-                self.send_error(400);return
-            self.send_response(200)
-            self.send_header('Content-Type','image/png')
-            self.send_header('Content-Length',str(len(data)))
-            self.send_header('Cache-Control','no-store')
-            self.end_headers()
-            self.wfile.write(data)
-            return
         if path in ('/hitster/qr.png', '/hitster/test'):
             card_id = q.get('id', [''])[0]
             with LOCK:
@@ -626,7 +600,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_error(404);return
             self.serve_file(AUDIO / mid);return
         files={'/':'index.html','/host':'index.html','/screen':'index.html','/play':'index.html',
-               '/app.js':'app.js','/style.css':'style.css','/show.js':'show.js','/show.css':'show.css','/v2.js':'v2.js','/v2.css':'v2.css'}
+               '/app.js':'app.js','/style.css':'style.css','/v2.js':'v2.js','/v2.css':'v2.css'}
         if path in files:
             self.serve_file(STATIC / files[path]);return
         if path=='/qr.png':
