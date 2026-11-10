@@ -6,7 +6,7 @@ const view = path === '/host' ? 'host' : path === '/screen' ? 'screen' : path ==
 const adminKey = new URLSearchParams(location.search).get('key') || '';
 let state = null, lastKey = '', music = null, lastTrack = '', spinningStamp = '', pollRunning = false;
 let savedToken = localStorage.getItem('sint-party-token') || '';
-let busy = false, messageTimer = 0, nextTick = 0, lastSidebarVersion = -1;
+let busy = false, messageTimer = 0, nextTick = 0, lastSidebarVersion = -1, importSummary = '';
 
 function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function player(id) { return state?.players.find(p=>p.id===id); }
@@ -55,6 +55,9 @@ function renderSetup() {
  <input class="input" id="target-${i}" type="number" min="0" max="99" value="${p.target}" aria-label="Cadeaus voor speler ${i+1}"/></div>`).join('');
  const files=state.audio_files?.map(m=>`<div class="saved"><span class="small">🎧 ${esc(m.artist)} – ${esc(m.title)} (${m.year})</span>
  <button class="btn ghost tinybtn" data-action="delete_audio" data-id="${m.id}">Wissen</button></div>`).join('')||'';
+
+ const cards=(state.hitster_cards||[]).slice().reverse();
+ const cardRows=cards.slice(0,75).map(c=>`<div class="hitster-row"><div><strong>${esc(c.artist)} — ${esc(c.title)}</strong><div class="small muted">${c.year} · ${esc(c.url.length>85?c.url.slice(0,85)+'…':c.url)}</div></div><div class="hitster-actions"><a class="btn secondary tinybtn" target="_blank" rel="noopener noreferrer" href="/hitster/test?id=${encodeURIComponent(c.id)}&key=${encodeURIComponent(adminKey)}">📺 Test QR</a><button class="btn ghost tinybtn" data-action="delete_hitster" data-id="${c.id}">Wissen</button></div></div>`).join('');
  return panel(`<div class="kicker">Welkom thuis, pakjesavond begint zo</div><h1>Vier spelers.<br><span style="color:var(--gold)">Eén zak vol verrassingen.</span></h1>
  <p class="muted" style="font-size:1.13rem;margin-top:17px">Stel de vier namen in. Een rad kiest steeds een minigame; de winnaar mag een cadeau verdelen.</p>
  <section><h3>👥 Deelnemers en cadeaus</h3><p class="small muted">Vul het aantal cadeaus per persoon in als jullie dat weten. Laat alle aantallen op 0 als je alleen wilt bijhouden wie het minst heeft.</p>
@@ -62,6 +65,15 @@ function renderSetup() {
  <div class="actions"><button class="btn" data-action="configure">💾 Namen opslaan</button><button class="btn mint" data-action="start">🎉 Start de spelshow</button></div></section>
  <section class="callout gold"><h3>📱 Zo spelen jullie samen</h3>${joinHelp()}
  <p class="small muted" style="margin-top:13px">Gebruik de hostpagina om de rondes te begeleiden. Open voor de TV eventueel het aparte TV-scherm. Deze pagina toont géén geheime opdrachten.</p></section>
+ <section><h3>🎵 Hitster QR-bibliotheek</h3>
+ <p class="small muted">${state.hitster_count||0} kaarten opgeslagen. Importeer CSV met <strong>URL, artiest, titel, jaar</strong> (één kaart per regel). Sintspel bewaart de ongewijzigde QR-inhoud en maakt de QR-code pas bij het tonen. Geen foto's en geen Spotify-koppeling nodig.</p>
+ <form id="hitster-import" class="upload-box"><label class="field-label" for="hitster-csv">CSV-bestand uit Apple Opdrachten</label>
+ <input class="input" type="file" name="csv" id="hitster-csv" accept=".csv,.txt,text/csv,text/plain" required>
+ <div class="actions"><button class="btn mint" type="submit">📥 Importeer Hitster-kaarten</button></div></form>
+ ${importSummary?`<div class="callout" role="status">${esc(importSummary)}</div>`:''}
+ ${cardRows||'<p class="small muted" style="margin-top:14px">Nog geen Hitster-kaarten geïmporteerd.</p>'}
+ ${cards.length>75?`<p class="small muted">Eerste 75 van ${cards.length} kaarten zichtbaar.</p>`:''}
+ <p class="small muted" style="margin-top:16px">Klik na import op <strong>Test QR</strong> bij een kaart, open die weergave op de TV en scan met de officiële Hitster-app. Controleer of het juiste nummer wordt geopend. De testpagina toont geen titel of artiest.</p></section>
  <section><h3>🎵 Optioneel: eigen muziekfragmenten</h3>
  <p class="small muted">${state.music_count} tracks toegevoegd. Bij Hitster gebruik je standaard de officiële app en jullie fysieke kaarten. Voeg eventueel eigen audiobestanden toe om de muziekronde automatisch te laten afspelen, zonder titel/jaar op TV te tonen.</p>
  <form id="upload" class="upload-box"><div class="form-row"><input class="input" name="artist" maxlength="100" placeholder="Artiest" required/>
@@ -130,8 +142,9 @@ function gameScreen() {
   ${view==='host'?`<div class="actions"><button class="btn" data-action="reveal">👁️ Onthul het woord</button></div>`:''}`;
  } else if(g.kind==='music'){
   question=`<div class="kicker">🎵 Hitster – nummer ${g.round} van ${g.total}</div><div class="question">Raad het jaar waarin dit nummer uitkwam.</div>
-  <div class="callout gold"><h3>${g.source==='audio'?'🎧 Audio uit jullie eigen muziekbibliotheek':'📱 Pak een Hitster-kaart'}</h3>
-  <p>${g.source==='audio'?'Het fragment is klaargezet. De titel en artiest blijven geheim tot de onthulling.':'Laat één speler een fysieke kaart scannen met de Hitster-app en speel het nummer af via de speaker. Draai de kaart nog niet om.'}</p>
+  <div class="callout gold"><h3>${g.source==='audio'?'🎧 Eigen audiobestand':g.source==='card'?'📺 Scan de QR-code op het scherm':'📱 Pak een fysieke Hitster-kaart'}</h3>
+  <p>${g.source==='audio'?'Het fragment is klaargezet. De titel en artiest blijven geheim tot de onthulling.':g.source==='card'?'Gebruik de officiële Hitster-app om de QR-code vanaf de televisie te scannen.':'Laat één speler een fysieke kaart scannen met de Hitster-app en speel het nummer af via de speaker. Draai de kaart nog niet om.'}</p>
+  ${g.source==='card'?`<div class="hitster-playing"><img src="${esc(g.qr_image_url)}" alt="Hitster-code voor het huidige nummer"></div>`:''}
   ${g.source==='audio'?`<div class="actions"><button class="btn mint" data-action="play_audio">▶ Speel muziek</button><button class="btn ghost" data-action="stop_audio">■ Stop</button></div>`:''}</div>
   <p class="muted" style="margin-top:17px">Vul op je telefoon het jaartal in, en eventueel de artiest.</p>
   <div style="margin-top:19px" class="count-chip" id="live-count">${counts[0]} van ${counts[1]} antwoorden binnen</div>
@@ -279,7 +292,7 @@ function buildKey() {
  if(view==='phone')return [view,state.room,state.me,state.mode,g?.category,g?.round,g?.phase,
    g?.my_submission===undefined?'':JSON.stringify(g.my_submission),g?.my_vote,g?.performer,
    state.gift?.winner,state.gifts_given].join('|');
- if(view==='host' && state.mode==='setup')return [view,state.mode,state.room,state.music_count,state.players.map(p=>p.name+p.target)].join('|');
+ if(view==='host' && state.mode==='setup')return [view,state.mode,state.room,state.music_count,state.hitster_count,state.players.map(p=>p.name+p.target)].join('|');
  return [view,state.mode,state.room,state.spin?.stamp,g?.category,g?.round,g?.phase,state.gift?.winner,state.gifts_given].join('|');
 }
 async function api(path,body,admin=false,upload=false){
@@ -390,6 +403,10 @@ async function actButton(button){
   }else if(a==='release_seat'){
     if(!window.confirm('Telefoon van '+pname(button.dataset.player)+' ontkoppelen? Deze speler kan zich opnieuw aanmelden.'))return;
     await admin('release_seat',{player:button.dataset.player});
+  }else if(a==='delete_hitster'){
+    if(!window.confirm('Deze Hitster-kaart verwijderen?'))return;
+    await admin('delete_hitster',{id:button.dataset.id});
+    importSummary='Kaart verwijderd.';
   }else if(a==='delete_audio'){
     if(!window.confirm('Deze audiotrack verwijderen?'))return;
     await admin('delete_audio',{id:button.dataset.id});
@@ -400,7 +417,17 @@ async function actButton(button){
 async function submitForm(form){
  if(busy)return;busy=true;
  try{
-  if(form.id==='upload'){
+  if(form.id==='hitster-import'){
+    const file=form.querySelector('input[type=file]')?.files[0];
+    if(!file)throw new Error('Kies eerst een CSV-bestand.');
+    if(file.size>300000)throw new Error('CSV is te groot (maximaal 300 KB).');
+    const result=await admin('import_hitster',{csv:await file.text()});
+    const d=result.data;
+    importSummary=`${d.added} kaarten toegevoegd; ${d.duplicates} duplicaten overgeslagen; ${d.skipped} ongeldige regels. Totaal: ${d.total}.`
+      +(d.errors?.length?' Fouten: '+d.errors.join(' | '):'');
+    lastKey='';await refresh();
+    toast('✅ CSV-import afgerond');
+  }else if(form.id==='upload'){
     const data=new FormData(form);
     const res=await api('/api/upload',data,true,true);
     toast('🎵 Muziek toegevoegd: '+res.title);
@@ -418,7 +445,7 @@ async function submitForm(form){
 }
 
 document.addEventListener('click',event=>{const b=event.target.closest('button[data-action]');if(b)actButton(b);});
-document.addEventListener('submit',event=>{if(event.target.matches('#answerform,#upload')){event.preventDefault();submitForm(event.target);}});
+document.addEventListener('submit',event=>{if(event.target.matches('#answerform,#upload,#hitster-import')){event.preventDefault();submitForm(event.target);}});
 if(view==='home')renderHome();
 refresh();
 setInterval(refresh,1000);

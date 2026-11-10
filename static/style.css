@@ -130,3 +130,13 @@ section+section{margin-top:24px}
 @media(max-width:560px){.wheel-stage{--wheel-radius:115px}}
 
 .linkbutton{background:none;color:#a5e7ce;text-decoration:underline;font-size:.75rem;padding:0}
+
+/* Locally imported Hitster QR cards; do not show song metadata during gameplay. */
+.hitster-row{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #ffffff20;padding:13px 0;overflow-wrap:anywhere}
+.hitster-row strong{font-size:.98rem}
+.hitster-row .small{margin-top:4px;font-size:.78rem}
+.hitster-actions{display:flex;gap:7px;flex-wrap:wrap;flex-shrink:0}
+.hitster-actions a{text-decoration:none;display:inline-flex;align-items:center}
+.hitster-playing{display:flex;justify-content:center;margin:20px auto 10px}
+.hitster-playing img{width:min(48vw,360px);max-width:100%;aspect-ratio:1;object-fit:contain;background:#fff;padding:12px;border-radius:14px;image-rendering:pixelated}
+@media(max-width:720px){.hitster-row{align-items:flex-start;flex-direction:column}.hitster-playing img{width:min(75vw,330px)}}

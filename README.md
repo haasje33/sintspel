@@ -102,3 +102,26 @@ De server draait op **jouw eigen computer**, niet in de cloud. De namen, scores,
 ## Technisch
 
 Alleen Python-standaardbibliotheek voor de server, gewone HTML/CSS/JS voor de interface, JSON-polling voor de synchronisatie. Geen npm-installatie, database of internetserver nodig. Starten met `python3 server.py`. Voor ontwikkeltests: `python tests/test_http.py` terwijl de server draait (dit reset de speldata!).
+
+## Hitster-kaarten importeren en op de TV testen
+
+Vanaf deze versie kun je een **CSV met originele Hitster QR-URL's** importeren. Dat werkt volledig lokaal zonder de QR-kaarten te fotograferen of Spotify/Apple Music te integreren.
+
+1. Maak met Apple **Opdrachten** een scanner die per Hitster-kaart de QR-URL, artiest, titel en het jaartal vastlegt. Zet iedere kaart op één CSV-regel in de volgorde **URL, artiest, titel, jaar**. Een kopregel is niet verplicht.
+2. Kopieer of mail het CSV-bestand naar de laptop. Voorbeeld met *fictieve* URL's:
+
+   ```csv
+   "https://voorbeeld.invalid/kaart001","ABBA","Dancing Queen",1976
+   "https://voorbeeld.invalid/kaart002","Queen","Bohemian Rhapsody",1975
+   ```
+
+3. Start de server en open de **beveiligde hostlink**. Ga vóór de eerste spelronde naar **Hitster QR-bibliotheek**, kies het CSV-bestand en klik op **Importeer Hitster-kaarten**.
+4. Je ziet per kaart de artiest, titel, het jaar en de opgeslagen QR-inhoud. Bestaande URL's worden niet dubbel geïmporteerd. Ongeldige regels worden gerapporteerd en overgeslagen.
+5. Klik bij één kaart op **📺 Test QR**. Een apart scherm toont de opnieuw gegenereerde QR-code, zonder het antwoord. Toon dit scherm groot op je TV en scan het met de **officiële Hitster-app**. Controleer met de originele kaart of het juiste nummer wordt geopend.
+6. Tijdens een Hitster-minigame toont het TV-scherm daarna automatisch QR-codes van opgeslagen kaarten. Titel, artiest en jaar verschijnen pas na het beantwoorden. De app probeert decennia binnen de ronde af te wisselen en voorkomt herhaling zolang ongebruikte kaarten beschikbaar zijn.
+
+**Belangrijk:** de software bewaart exact de ingescande URL (zonder verkorten, redirects volgen of aanpassen), maar de nieuwe QR-afbeelding kan een ander pixelpatroon hebben. Of de officiële Hitster-app opnieuw gegenereerde codes accepteert, moet je met de eerste echte kaart controleren. De app kan dit niet zelf bevestigen.
+
+**Privacy:** de bibliotheek blijft in `party-state.json` op de laptop, die door `.gitignore` uit de openbare GitHub-repository wordt gehouden. Deel de geheime hostlink niet. Er is geen koppeling met Hitster of een streaming-API.
+
+**Formaat:** UTF-8 CSV met (optioneel) kolommen `URL,Artiest,Titel,Jaar` en komma's of puntkomma's. Vul aanhalingstekens binnen titels in CSV in als dubbele `""`; de scanner kan dat automatisch afhandelen. Maximaal 300 KB per import en 2000 kaarten in de bibliotheek. De import werkt vóór het starten van de spelavond. Een reset van de scores bewaart de Hitster-bibliotheek.

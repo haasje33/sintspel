@@ -15,6 +15,7 @@ import time
 import unicodedata
 import uuid
 from copy import deepcopy
+from hitster_library import MAX_CARDS, parse_cards_csv, qr_png
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -185,7 +186,7 @@ def init_state():
         'players':[{'id':f'p{i+1}','name':name,'received':0,'target':0,'wins':0,'token':None}
                    for i,name in enumerate(['Moeder','Speler 2','Speler 3','Speler 4'])],
         'bag':[], 'recent':[], 'spin':None, 'game':None, 'gift':None,
-        'history':[], 'music':[], 'used':{}, 'started_at':None,
+        'history':[], 'music':[], 'hitster_cards':[], 'hitster_used':[], 'used':{}, 'started_at':None,
     }
 
 
@@ -194,6 +195,8 @@ def load_state():
         s = json.loads(DATA.read_text(encoding='utf-8'))
         if not isinstance(s,dict) or len(s.get('players',[])) != 4:
             raise ValueError('Corrupt state')
+        s.setdefault('hitster_cards', [])
+        s.setdefault('hitster_used', [])
         return s
     except (OSError, ValueError, TypeError):
         return init_state()
@@ -259,6 +262,32 @@ def choose_category():
     return selected
 
 
+def pick_hitster_cards(amount):
+    """Use fresh cards; spread questions over available decades when possible."""
+    cards = S.get('hitster_cards', [])
+    selected = []
+    used = set(S.get('hitster_used', []))
+    for _ in range(min(amount, len(cards))):
+        remaining = [c for c in cards if c['id'] not in used and c not in selected]
+        if not remaining:
+            used = set()
+            remaining = [c for c in cards if c not in selected]
+        if not remaining:
+            break
+        groups = {}
+        for c in remaining:
+            groups.setdefault(c['year'] // 10 * 10, []).append(c)
+        least = min(sum(c['year'] // 10 * 10 == decade for c in selected)
+                    for decade in groups)
+        decades = [decade for decade in groups
+                   if sum(c['year'] // 10 * 10 == decade for c in selected) == least]
+        pick = RNG.choice(groups[RNG.choice(decades)])
+        selected.append(pick)
+        used.add(pick['id'])
+    S['hitster_used'] = list(used)
+    return selected
+
+
 def make_game(category):
     kind=CAT[category]['kind']
     points={p['id']:0 for p in S['players']}
@@ -268,17 +297,25 @@ def make_game(category):
     if kind=='estimate':
         game['questions']=[{'question':q,'answer':a,'explain':e} for q,a,e in sample_bank('estimate',ESTIMATES,3)]
     elif kind=='music':
-        tracks = list(S['music'])
+        cards = pick_hitster_cards(3) if S.get('hitster_cards') else []
+        questions = [{'question':'Welk jaar kwam dit nummer uit?',
+                      'audio':None, 'card_id':c['id'], 'answer':c['year'],
+                      'artist':c['artist'], 'song':c['title'],
+                      'explain':'Scan de QR-code op de TV met de officiële Hitster-app'}
+                     for c in cards]
+        tracks = list(S['music']) if not cards else []
         RNG.shuffle(tracks)
-        while len(tracks)<3:
-            tracks.append(None)
-        game['questions']=[{'question':'Welk jaar kwam dit nummer uit?',
-                            'audio':m['id'] if m else None,
-                            'answer':m['year'] if m else None,
-                            'artist':m['artist'] if m else '',
-                            'song':m['title'] if m else '',
-                            'explain':('Eigen muziekbestand' if m else 'Scan een fysieke Hitster-kaart met de officiële app')}
-                           for m in tracks[:3]]
+        for m in tracks[:3-len(questions)]:
+            questions.append({'question':'Welk jaar kwam dit nummer uit?',
+                              'audio':m['id'], 'card_id':None, 'answer':m['year'],
+                              'artist':m['artist'], 'song':m['title'],
+                              'explain':'Eigen muziekbestand'})
+        while len(questions) < 3:
+            questions.append({'question':'Welk jaar kwam dit nummer uit?',
+                              'audio':None, 'card_id':None, 'answer':None,
+                              'artist':'', 'song':'',
+                              'explain':'Scan een fysieke Hitster-kaart met de officiële app'})
+        game['questions'] = questions
     elif kind=='creative':
         bank=LIFE if category=='levensweg' else CREATIVE
         game['questions']=[{'question':q} for q in sample_bank(category,bank,2)]
@@ -400,7 +437,7 @@ def sanitized(view, token=''):
        'categories':CATEGORIES,'spin':S['spin'], 'eligible':eligible(),
        'gift':deepcopy(S['gift']), 'last_games':[h for h in S['history'] if h['type']=='game'][-8:],
        'gifts_given':len([h for h in S['history'] if h['type']=='gift']),
-       'music_count':len(S['music']),'games_played':len([h for h in S['history'] if h['type']=='game']),
+       'music_count':len(S['music']),'hitster_count':len(S.get('hitster_cards', [])),'games_played':len([h for h in S['history'] if h['type']=='game']),
        'me':me['id'] if me else None,
        'history_count':len(S['history']),'started_at':S['started_at'],
        'join_url':f'http://{lan_ip()}:{PORT}/play', 'screen_url':f'http://{lan_ip()}:{PORT}/screen',
@@ -419,7 +456,8 @@ def sanitized(view, token=''):
         else:
             safe['question']=q.get('question') or 'Raad het woord!'
         if g['kind']=='music':
-            safe['source']='audio' if q['audio'] else 'hitster'
+            safe['source']='card' if q.get('card_id') else ('audio' if q['audio'] else 'hitster')
+            safe['qr_image_url']=('/hitster/qr.png?id='+q['card_id']) if q.get('card_id') else None
             safe['audio_url']=('/media/'+q['audio']) if q['audio'] else None
         if g['kind']=='performance':
             safe['performer']=q['performer']
@@ -439,6 +477,7 @@ def sanitized(view, token=''):
     else:out['game']=None
     if is_admin:
         out['audio_files']=[{'id':m['id'],'title':m['title'],'artist':m['artist'],'year':m['year']} for m in S['music']]
+        out['hitster_cards']=deepcopy(S.get('hitster_cards', []))
     return out
 
 
@@ -481,6 +520,52 @@ class Handler(BaseHTTPRequestHandler):
             with LOCK:self.jsonout(sanitized(view,q.get('token',[''])[0]));return
         if path=='/api/health':
             self.jsonout({'ok':True,'room':S['room']});return
+        if path in ('/hitster/qr.png', '/hitster/test'):
+            card_id = q.get('id', [''])[0]
+            with LOCK:
+                card = next((c for c in S.get('hitster_cards', []) if c['id'] == card_id), None)
+                game = S.get('game') or {}
+                active = (S.get('mode') == 'game' and game.get('kind') == 'music'
+                          and game['questions'][game['round']].get('card_id') == card_id)
+            admin_access = q.get('key', [''])[0] == ADMIN_KEY
+            if not card or not (admin_access or (active and path == '/hitster/qr.png')):
+                self.send_error(404)
+                return
+            if path == '/hitster/qr.png':
+                try:
+                    data = qr_png(card['url'])
+                except (ValueError, OverflowError) as exc:
+                    print('Hitster QR error', repr(exc))
+                    self.send_error(400)
+                    return
+                self.send_response(200)
+                self.send_header('Content-Type', 'image/png')
+                self.send_header('Content-Length', str(len(data)))
+                self.send_header('Cache-Control', 'no-store')
+                self.send_header('X-Content-Type-Options', 'nosniff')
+                self.end_headers()
+                self.wfile.write(data)
+                return
+            from html import escape
+            src = '/hitster/qr.png?id=' + card_id + '&key=' + ADMIN_KEY
+            html = ("<!doctype html><html lang='nl'><head><meta charset='utf-8'>"
+                    "<meta name='viewport' content='width=device-width, initial-scale=1'>"
+                    "<title>Hitster — testcode</title><style>body{background:#101d25;color:white;"
+                    "font-family:system-ui;text-align:center;margin:0;display:grid;place-content:center;"
+                    "min-height:100vh}img{width:min(84vw,68vh,620px);image-rendering:pixelated;"
+                    "background:white;padding:12px;border-radius:12px}p{margin:18px auto}"
+                    "</style></head><body><h1>🎵 Hitster — testcode</h1><p>Scan met de officiële Hitster-app</p>"
+                    f"<img alt='Hitster QR-testcode' src='{escape(src, quote=True)}'>"
+                    "<p>Controleer of hetzelfde nummer wordt afgespeeld.</p></body></html>")
+            data = html.encode('utf-8')
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/html; charset=utf-8')
+            self.send_header('Content-Length', str(len(data)))
+            self.send_header('Cache-Control', 'no-store')
+            self.send_header('Referrer-Policy', 'no-referrer')
+            self.end_headers()
+            self.wfile.write(data)
+            return
         if path=='/favicon.ico':
             self.send_response(204);self.end_headers();return
         if path.startswith('/media/'):
@@ -715,8 +800,35 @@ class Handler(BaseHTTPRequestHandler):
             code=str(a.get('confirmation',''))
             if code!='RESET':raise ValueError('Typ RESET om te bevestigen.')
             music=deepcopy(S['music'])
-            S.clear();S.update(init_state());S['music']=music
+            hitster=deepcopy(S.get('hitster_cards', []))
+            S.clear();S.update(init_state());S['music']=music;S['hitster_cards']=hitster
             save();return {'reset':True}
+        if action=='import_hitster':
+            if S['mode'] != 'setup':
+                raise ValueError('Importeer kaarten vóór het starten van de spelavond.')
+            existing = S.setdefault('hitster_cards', [])
+            available = MAX_CARDS - len(existing)
+            if available <= 0:
+                raise ValueError('De Hitster-bibliotheek is vol (maximaal 2000 kaarten).')
+            cards, duplicates, errors = parse_cards_csv(
+                a.get('csv', ''), (c['url'] for c in existing), available)
+            for card in cards:
+                card['id'] = uuid.uuid4().hex
+            existing.extend(cards)
+            save()
+            return {'added':len(cards), 'duplicates':duplicates,
+                    'skipped':len(errors), 'errors':errors[:15], 'total':len(existing)}
+        if action=='delete_hitster':
+            if S['mode'] != 'setup':
+                raise ValueError('Kaarten kunnen alleen vóór de spelavond worden verwijderd.')
+            card_id = a.get('id', '')
+            old = len(S.get('hitster_cards', []))
+            S['hitster_cards'] = [c for c in S.get('hitster_cards', []) if c['id'] != card_id]
+            if len(S['hitster_cards']) == old:
+                raise ValueError('Kaart niet gevonden.')
+            S['hitster_used'] = [i for i in S.get('hitster_used', []) if i != card_id]
+            save()
+            return {'deleted':True}
         if action=='delete_audio':
             mid=a.get('id','')
             m=next((m for m in S['music'] if m['id']==mid),None)
