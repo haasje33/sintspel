@@ -274,6 +274,21 @@ class ShowTests(unittest.TestCase):
         self.assertIn('},6500);}',client)
         self.assertIn('5.05s forwards',style)
 
+    def test_large_screen_layout_is_tv_only(self):
+        root=Path(__file__).resolve().parents[1]
+        markup=(root/'static'/'index.html').read_text(encoding='utf-8')
+        client=(root/'static'/'v2.js').read_text(encoding='utf-8')
+        css=(root/'static'/'v2.css').read_text(encoding='utf-8')
+        self.assertIn("location.pathname==='/screen'",markup)
+        self.assertIn("classList.add('tv-display')",markup)
+        self.assertIn("side?'with-sidebar':'full-stage'",client)
+        self.assertIn("html.tv-display .layout.full-stage",css)
+        self.assertIn("html.tv-display .wheel-wrap",css)
+        self.assertIn("html.tv-display .grocery-list",css)
+        self.assertIn("html.tv-display .tv-mini-join",css)
+        self.assertIn("html.tv-display .player-details strong",css)
+        self.assertIn("clamp(64px,3.12vw,118px)",css)
+
     def test_dice_yahtzee_separate(self):
         g=self.start('dice');r=g['rounds'][0]
         r['rule']='target';r['target']=6

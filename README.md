@@ -1,6 +1,6 @@
 # 🎁 De Grote Sinterklaas Spellenavond — Sintspel 2.0
 
-Een lokale, interactieve familiespelshow. De **laptop** draait de spelserver en is de spelleider; de **TV** toont het spelrad, de kaarten, animaties en uitslagen; **vier telefoons** gebruiken dezelfde wifi voor geheime antwoorden en stemmingen. Geen cloudserver, database-abonnement of externe hosting nodig.
+Een lokale, interactieve familiespelshow. De route **`/screen`** gebruikt een aparte, groot weergegeven TV-layout voor 1440p en 4K met grotere opdrachten, jaartallen, kaarten, timers, het rad en de scores. Zet de TV-browser bij voorkeur in volledig scherm (F11) met 100% zoom; de laptop en telefoons blijven ongewijzigd. De **laptop** draait de spelserver en is de spelleider; de **TV** toont het spelrad, de kaarten, animaties en uitslagen; **vier telefoons** gebruiken dezelfde wifi voor geheime antwoorden en stemmingen. Geen cloudserver, database-abonnement of externe hosting nodig.
 
 ## Starten
 

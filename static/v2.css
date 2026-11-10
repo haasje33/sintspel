@@ -69,3 +69,129 @@ footer{text-align:center;padding:18px 20px;color:#73879b;font-size:.75rem}.visib
 /* Reveal the selected minigame only after the 5-second wheel animation. */
 .wheel-result-pending{opacity:0;visibility:hidden;animation:wheel-show-result .35s ease 5.05s forwards}
 @keyframes wheel-show-result{from{opacity:0;visibility:hidden;transform:translateY(10px)}to{opacity:1;visibility:visible;transform:translateY(0)}}
+
+
+/* LARGE-FORMAT TV DISPLAY — only /screen, never the laptop or phones.
+   Real viewport-based typography, not browser zoom or transform scaling. */
+html.tv-display{--tv-body:clamp(25px,1.3vw,48px);--tv-detail:clamp(23px,1.1vw,42px);--tv-heading:clamp(64px,3.12vw,118px);--tv-subheading:clamp(42px,2vw,76px)}
+html.tv-display body{font-size:var(--tv-body);line-height:1.3}
+html.tv-display h1{font-size:var(--tv-heading);line-height:1.08;letter-spacing:-.025em;text-wrap:balance}
+html.tv-display h2{font-size:var(--tv-subheading);line-height:1.13;text-wrap:balance}
+html.tv-display h3{font-size:clamp(32px,1.55vw,59px)}
+html.tv-display p{margin:clamp(9px,.7vw,28px) 0;line-height:1.33}
+html.tv-display .subtle,html.tv-display .small,html.tv-display .fine{font-size:var(--tv-detail);line-height:1.3}
+html.tv-display .eyebrow{font-size:clamp(23px,1.12vw,43px);letter-spacing:.1em;margin:0 0 clamp(12px,.8vw,31px)}
+html.tv-display .topbar{padding:clamp(15px,.8vw,32px) 2vw;gap:clamp(18px,1.2vw,48px)}
+html.tv-display .brand{gap:clamp(15px,1vw,38px)}
+html.tv-display .brand-signet{width:clamp(68px,3.1vw,118px);height:clamp(68px,3.1vw,118px);font-size:clamp(40px,2vw,77px)}
+html.tv-display .brand b{font-size:clamp(20px,.9vw,35px)}
+html.tv-display .brand strong{font-size:clamp(29px,1.46vw,55px);letter-spacing:.02em}
+html.tv-display .head-label{font-size:clamp(22px,1.05vw,39px)}
+html.tv-display .roomcode{font-size:clamp(28px,1.26vw,48px);padding:clamp(9px,.5vw,22px) clamp(14px,.8vw,33px)}
+html.tv-display .sound-toggle{font-size:clamp(21px,1vw,38px);padding:clamp(10px,.55vw,23px) clamp(14px,.8vw,33px)}
+html.tv-display .layout{width:96.5vw;max-width:none;min-height:0;margin:clamp(12px,1vh,30px) auto 22px;display:grid;grid-template-columns:minmax(0,1fr) clamp(355px,19vw,730px);gap:clamp(22px,1.65vw,63px);align-items:start}
+html.tv-display .layout.full-stage{grid-template-columns:minmax(0,1fr)}
+html.tv-display .stage,html.tv-display .stage-card{min-width:0}
+html.tv-display .stage-card{padding:clamp(34px,2.05vw,78px);min-height:clamp(630px,70vh,1630px);border-radius:clamp(22px,1.1vw,42px)}
+html.tv-display .layout.full-stage .stage-card{min-height:0}
+html.tv-display .stage-card>h1{margin-bottom:clamp(18px,1vw,40px)}
+html.tv-display .stage-card>p{font-size:var(--tv-body)}
+html.tv-display .sidebar{padding:clamp(22px,1.2vw,46px);top:clamp(10px,1vh,28px);border-radius:clamp(17px,1vw,36px)}
+html.tv-display .sidebar h3{font-size:clamp(36px,1.8vw,69px);margin-bottom:clamp(17px,1vw,39px)}
+html.tv-display .sidebar .small{font-size:clamp(24px,1.13vw,42px)}
+html.tv-display .gift-progress{height:clamp(15px,.72vw,28px)}
+html.tv-display .player-row{padding:clamp(13px,.75vw,29px) 0;gap:clamp(12px,.7vw,27px)}
+html.tv-display .avatar{width:clamp(54px,2.55vw,97px);height:clamp(54px,2.55vw,97px);flex:none;font-size:clamp(28px,1.45vw,55px)}
+html.tv-display .player-details strong{font-size:clamp(28px,1.4vw,53px);overflow-wrap:anywhere}
+html.tv-display .player-details small,html.tv-display .player-gifts small{font-size:clamp(21px,.98vw,38px)}
+html.tv-display .player-gifts b{font-size:clamp(30px,1.5vw,58px)}
+html.tv-display .pill{font-size:clamp(24px,1.14vw,44px);padding:clamp(9px,.55vw,21px) clamp(14px,.8vw,31px)}
+html.tv-display .game-head{gap:clamp(12px,1vw,39px);margin-bottom:clamp(20px,1.1vw,43px)}
+html.tv-display .game-stage h1{font-size:clamp(60px,2.8vw,106px)}
+html.tv-display .game-stage p{font-size:var(--tv-body);margin:clamp(12px,.65vw,26px) 0}
+html.tv-display .step-points{font-size:clamp(31px,1.5vw,57px);margin-bottom:clamp(15px,1vw,39px)}
+html.tv-display .submit-count{font-size:clamp(26px,1.2vw,46px);margin:clamp(16px,.9vw,34px) 0}
+html.tv-display .score-strip{gap:clamp(12px,.75vw,29px);margin-top:clamp(19px,1vw,40px)}
+html.tv-display .score-chip{font-size:clamp(25px,1.2vw,45px);gap:clamp(12px,.8vw,31px);padding:clamp(12px,.7vw,27px) clamp(16px,.9vw,35px)}
+html.tv-display .waiting,html.tv-display .message,html.tv-display .rule-box,html.tv-display .reveal-box{font-size:clamp(29px,1.4vw,53px);padding:clamp(20px,1.15vw,44px);line-height:1.3}
+html.tv-display .wheel-wrap{width:min(60vh,55vw,1120px);--tv-wheel-radius:clamp(180px,22vh,452px);margin:clamp(15px,1vh,32px) auto}
+html.tv-display .wheel-disc{border-width:clamp(11px,.55vw,21px)}
+html.tv-display .wheel-pointer{border-left-width:clamp(22px,1.05vw,40px);border-right-width:clamp(22px,1.05vw,40px);border-top-width:clamp(40px,1.9vw,73px);left:calc(50% - clamp(22px,1.05vw,40px))}
+html.tv-display .wheel-label{font-size:clamp(26px,1.25vw,48px);line-height:1.07;transform:translate(-50%,-50%) rotate(calc((var(--pos) + .5) * 360deg / var(--total))) translateY(calc(var(--tv-wheel-radius) * -1)) rotate(calc((var(--pos) + .5) * -360deg / var(--total)))}
+html.tv-display .wheel-label small{font-size:clamp(20px,.99vw,38px);max-width:clamp(118px,9vw,345px);overflow-wrap:break-word}
+html.tv-display .wheel-hub{width:clamp(100px,5vw,190px);height:clamp(100px,5vw,190px);left:calc(50% - clamp(50px,2.5vw,95px));top:calc(50% - clamp(50px,2.5vw,95px));font-size:clamp(48px,2.45vw,93px)}
+html.tv-display .result-banner,html.tv-display .wheel-turn{font-size:clamp(35px,1.8vw,68px);margin:clamp(18px,1vw,40px) auto}
+html.tv-display .timeline{width:min(94%,1730px);height:clamp(415px,37.5vh,810px);margin:clamp(20px,1.1vw,43px) auto}
+html.tv-display .timeline-card{width:calc((100% - 44px)/3)}
+html.tv-display .song-card-front,html.tv-display .flip-front,html.tv-display .flip-back{padding:clamp(16px,1vw,38px);border-width:clamp(4px,.3vw,11px)}
+html.tv-display .song-card-front strong,html.tv-display .flip-front strong{font-size:clamp(28px,1.42vw,54px);line-height:1.13;overflow-wrap:anywhere}
+html.tv-display .song-card-front small,html.tv-display .flip-back small,html.tv-display .flip-front span{font-size:clamp(23px,1.08vw,41px);line-height:1.18;overflow-wrap:anywhere}
+html.tv-display .song-year{font-size:clamp(50px,2.6vw,99px)}
+html.tv-display .song-disc{width:clamp(80px,4vw,152px);height:clamp(80px,4vw,152px);font-size:clamp(45px,2.25vw,86px);margin-bottom:clamp(10px,.65vw,25px)}
+html.tv-display .qr-header{font-size:clamp(22px,1vw,39px)}
+html.tv-display .music-qr{padding:clamp(6px,.4vw,15px);max-height:72%}
+html.tv-display .music-spot{min-height:0;margin:clamp(17px,1.1vw,42px) 0}
+html.tv-display .single-card{width:clamp(400px,20vw,750px)}
+html.tv-display .single-card .flip-front b{font-size:clamp(55px,2.8vw,106px)}
+html.tv-display .big-prompt{font-size:clamp(44px,2.1vw,80px);line-height:1.19;padding:clamp(25px,1.4vw,54px);margin:clamp(20px,1.1vw,44px) 0}
+html.tv-display .quip-options{gap:clamp(16px,1vw,39px);margin:clamp(20px,1.1vw,45px) 0}
+html.tv-display .quip-item{font-size:clamp(30px,1.45vw,55px);padding:clamp(20px,1vw,39px);line-height:1.24;overflow-wrap:anywhere}
+html.tv-display .question-pips{gap:clamp(10px,.5vw,20px)}
+html.tv-display .question-pips span{font-size:clamp(26px,1.25vw,48px);padding:clamp(11px,.65vw,25px)}
+html.tv-display .dice-display{gap:clamp(17px,.9vw,36px)}
+html.tv-display .dice-display div{width:clamp(100px,5.4vw,206px);height:clamp(100px,5.4vw,206px);font-size:clamp(82px,4.4vw,170px)}
+html.tv-display .playing-cards{gap:clamp(18px,1.6vw,61px)}
+html.tv-display .playing-card{width:clamp(170px,10.7vw,408px)}
+html.tv-display .playing-back{font-size:clamp(75px,4vw,150px)}
+html.tv-display .playing-back small{font-size:clamp(20px,1vw,38px)}
+html.tv-display .playing-face{font-size:clamp(105px,5.2vw,200px)}
+html.tv-display .timer-hero{font-size:clamp(135px,8.2vw,315px);padding:clamp(17px,1vw,40px)}
+html.tv-display .score-table{max-width:min(94%,1770px);margin:clamp(24px,1.3vw,50px) auto}
+html.tv-display .score-line{font-size:clamp(35px,1.7vw,65px);gap:clamp(22px,1vw,42px);padding:clamp(16px,.88vw,34px)}
+html.tv-display .review .winners{gap:clamp(20px,1vw,39px);margin:clamp(25px,1.3vw,50px) 0}
+html.tv-display .winner{min-width:clamp(220px,12vw,460px);padding:clamp(23px,1.1vw,42px)}
+html.tv-display .winner span{font-size:clamp(55px,3vw,113px)}
+html.tv-display .winner strong{font-size:clamp(36px,1.8vw,68px)}
+html.tv-display .winner small{font-size:clamp(27px,1.4vw,52px)}
+html.tv-display .prize-icons{font-size:clamp(90px,5vw,188px)}
+html.tv-display .winner-display{font-size:clamp(36px,1.8vw,69px);padding:clamp(20px,1.1vw,43px)}
+html.tv-display .gift-stage .gift-choice{font-size:clamp(32px,1.6vw,61px);min-height:clamp(130px,8vw,310px)}
+html.tv-display .gift-stage .gift-choice small{font-size:clamp(23px,1.1vw,43px)}
+html.tv-display .prize-footer{font-size:clamp(26px,1.25vw,48px)}
+html.tv-display .alarm-screen{min-height:78vh;padding:clamp(50px,3vw,115px);border-width:clamp(9px,.48vw,18px)}
+html.tv-display .alarm-screen h1{font-size:clamp(125px,9vw,340px)}
+html.tv-display .alarm-screen h2{font-size:clamp(60px,3.1vw,119px)}
+html.tv-display .alarm-siren{font-size:clamp(135px,7.5vw,286px)}
+html.tv-display .groceries{min-height:0}
+html.tv-display .grocery-list{grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(12px,.7vw,27px);margin:clamp(25px,1.35vw,51px) 0}
+html.tv-display .grocery-list>div{font-size:clamp(29px,1.32vw,50px);min-height:clamp(65px,3.45vw,132px);padding:clamp(15px,.8vw,31px);line-height:1.18;overflow-wrap:anywhere}
+html.tv-display .grocery-list.compact>div{min-height:0}
+html.tv-display .tv-lobby{min-height:69vh}
+html.tv-display .tv-join{max-width:none;gap:clamp(45px,3vw,115px);margin:clamp(32px,2vw,75px) auto}
+html.tv-display .tv-join-qr{padding:clamp(16px,.85vw,33px);border-width:clamp(9px,.5vw,19px)}
+html.tv-display .tv-join-qr img{width:clamp(310px,17vw,650px)}
+html.tv-display .tv-join-instructions{max-width:clamp(630px,38vw,1460px)}
+html.tv-display .tv-join-instructions h2{font-size:clamp(57px,2.8vw,108px)}
+html.tv-display .tv-join-instructions p{font-size:clamp(30px,1.45vw,56px)}
+html.tv-display .tv-join-instructions .join-link{font-size:clamp(27px,1.33vw,51px)}
+html.tv-display .tv-join-instructions .join-room-code{font-size:clamp(34px,1.7vw,65px)}
+html.tv-display .tv-join-instructions .join-room-code strong{font-size:clamp(50px,2.5vw,96px)}
+html.tv-display .tv-mini-join{right:clamp(18px,1vw,38px);bottom:clamp(15px,.85vw,33px);width:clamp(220px,10.2vw,390px);padding:clamp(9px,.55vw,21px);gap:clamp(6px,.33vw,13px)}
+html.tv-display .tv-mini-join img{width:clamp(184px,8.6vw,329px);height:clamp(184px,8.6vw,329px);padding:clamp(6px,.3vw,12px)}
+html.tv-display .tv-mini-caption,html.tv-display .tv-mini-room{font-size:clamp(17px,.75vw,29px)}
+html.tv-display footer{display:none}
+@media(max-width:1650px){
+  html.tv-display .layout{grid-template-columns:minmax(0,1fr) minmax(300px,23vw)}
+  html.tv-display .layout.full-stage{grid-template-columns:minmax(0,1fr)}
+  html.tv-display .stage-card{padding:28px;min-height:0}
+  html.tv-display .wheel-wrap{--tv-wheel-radius:clamp(150px,21vh,250px)}
+  html.tv-display .wheel-label{font-size:23px}
+  html.tv-display .wheel-label small{font-size:18px;max-width:130px}
+}
+@media(max-width:1000px){
+  html.tv-display .layout{display:block;width:96vw}
+  html.tv-display .sidebar{margin-top:20px}
+  html.tv-display .grocery-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+  html.tv-display .tv-join{flex-direction:column;text-align:center}
+}
+@media(prefers-reduced-motion:reduce){html.tv-display .wheel-result-pending{opacity:1;visibility:visible;animation:none}}

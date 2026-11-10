@@ -55,7 +55,7 @@ function tvJoinMini(){
   <div class="tv-mini-room">CODE ${html(state.room)}</div>
  </aside>`;
 }
-function shell(content,side=true){return `${decorate()}${header()}<main class="layout"><section class="stage">${content}</section>${side?scoreboard():''}</main><footer>Een avond vol verrassingen · Alleen op jullie eigen wifi</footer>${tvJoinMini()}`;}
+function shell(content,side=true){return `${decorate()}${header()}<main class="layout ${side?'with-sidebar':'full-stage'}"><section class="stage">${content}</section>${side?scoreboard():''}</main><footer>Een avond vol verrassingen · Alleen op jullie eigen wifi</footer>${tvJoinMini()}`;}
 const button=(act,label,cls='',attrs='')=>`<button class="btn ${cls}" data-act="${act}" ${attrs}>${label}</button>`;
 const pill=t=>`<span class="pill">${t}</span>`;
 function home(){return `<main class="entry-screen"><div class="entry-panel"><div class="big-signet">🎁</div><p class="eyebrow">Sintspel 2.0</p><h1>Welkom op de<br>pakjesavond!</h1><p>De laptop is de spelleider, de TV het speelbord en iedere speler gebruikt een telefoon.</p>
