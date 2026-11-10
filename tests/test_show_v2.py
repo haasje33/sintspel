@@ -1,6 +1,7 @@
 """Run: python -m unittest tests.test_show_v2 or python tests/test_show_v2.py."""
 import sys
 import unittest
+import time
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import show_v2 as game
@@ -207,6 +208,71 @@ class ShowTests(unittest.TestCase):
         self.assertEqual(game.load_packaged_library(state,library),130)
         self.assertEqual(len(state['hitster_cards']),130)
         self.assertEqual(len({x['url'] for x in state['hitster_cards']}),130)
+
+    def test_solo_testing_can_reveal_with_missing_answers(self):
+        # Host can progress without any of the four player phones.
+        for category in ('classic','quiz','dice','taboo'):
+            self.s['show2']['mode']='wheel'
+            g=self.start(category)
+            if category=='classic':self.a('v2_choose',value='medium')
+            if category=='quiz':self.a('v2_choose',value='80s & 90s')
+            self.a('v2_reveal')
+            self.assertEqual(g['phase'],'reveal')
+            self.assertTrue(all(score==0 for score in g['scores'].values()))
+            self.a('v2_next')
+            self.assertEqual(g['phase'],'choose' if category in ('classic','quiz') else 'answer')
+            self.a('v2_return_wheel')
+
+    def test_quiplash_works_with_zero_or_one_answers_and_no_votes(self):
+        g=self.start('quiplash')
+        self.p('p1','v2_answer','Mijn grappige antwoord')
+        self.a('v2_open_vote')
+        self.assertEqual(len(g['rounds'][0]['option_tokens']),1)
+        self.a('v2_reveal')
+        self.assertTrue(all(score==0 for score in g['scores'].values()))
+        self.a('v2_next')
+        self.a('v2_open_vote')
+        self.assertEqual(len(g['rounds'][1]['option_tokens']),0)
+        self.a('v2_reveal')
+        self.assertTrue(all(score==0 for score in g['scores'].values()))
+
+    def test_card_duel_zero_and_partial_guesses_do_not_get_free_points(self):
+        g=self.start('cards')
+        r=g['rounds'][0]
+        self.a('v2_reveal')
+        self.assertTrue(r['deal_finished'])
+        self.assertEqual(r['deal_winners'],[])
+        self.assertTrue(all(score==0 for score in g['scores'].values()))
+        self.a('v2_next')
+        self.assertEqual(g['round_index'],1)
+        r=g['rounds'][1]
+        wrong='black' if r['cards'][0]['s'] in 'HD' else 'red'
+        self.p('p1','v2_answer',wrong)
+        self.a('v2_reveal')
+        self.assertEqual(r['deal_winners'],[])
+        self.assertTrue(all(score==0 for score in g['scores'].values()))
+
+    def test_investigator_and_groceries_can_finish_without_answers(self):
+        g=self.start('three')
+        self.a('v2_reveal')
+        self.assertEqual(g['phase'],'reveal')
+        self.assertTrue(all(score==0 for score in g['scores'].values()))
+        self.assertTrue(game.view(self.s,is_admin=True)['game']['current']['guess_skipped'])
+        self.a('v2_return_wheel')
+        sh=self.s['show2'];gr=sh['grocery']
+        sh['mode']='grocery_recall';gr['phase']='recall';gr['items']=['brood','melk']
+        gr['deadline']=time.time()+180
+        self.a('v2_grocery_close')
+        self.assertEqual(sh['mode'],'grocery_review')
+        self.assertEqual({result['score'] for result in gr['review'].values()},{0})
+
+    def test_wheel_result_is_hidden_until_spin_animation_ends(self):
+        root=Path(__file__).resolve().parents[1]
+        client=(root/'static'/'v2.js').read_text(encoding='utf-8')
+        style=(root/'static'/'v2.css').read_text(encoding='utf-8')
+        self.assertIn('wheel-result-pending',client)
+        self.assertIn('},6500);}',client)
+        self.assertIn('5.05s forwards',style)
 
     def test_dice_yahtzee_separate(self):
         g=self.start('dice');r=g['rounds'][0]
