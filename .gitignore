@@ -1,0 +1,6 @@
+party-state.json
+.host-key
+audio/*
+!audio/.gitkeep
+__pycache__/
+*.pyc
