@@ -44,7 +44,18 @@ function scoreboard(){const show=state.show;return `<aside class="sidebar">
 ${state.players.map((p,i)=>`<div class="player-row"><div class="avatar">${['👑','🎄','⭐','🔔'][i]}</div><div class="player-details"><strong>${html(p.name)}</strong><small>${p.wins}× gewonnen</small></div><div class="player-gifts"><b>${p.received}/${p.target}</b><small>cadeaus</small></div></div>`).join('')}
 ${isHost?`<div class="side-tools"><button class="soft" data-act="v2_reset">↺ Nieuwe spelavond</button><a class="soft" href="/screen" target="_blank" rel="noopener">📺 TV-scherm</a></div>`:''}
 </aside>`;}
-function shell(content,side=true){return `${decorate()}${header()}<main class="layout"><section class="stage">${content}</section>${side?scoreboard():''}</main><footer>Een avond vol verrassingen · Alleen op jullie eigen wifi</footer>`;}
+function tvJoinMini(){
+ // Render on every TV game view except the lobby, which already has a large QR.
+ if(page!=='screen'||state?.show?.mode==='setup'||!state?.join_url||!state?.room)return '';
+ const url=state.join_url+'?room='+encodeURIComponent(state.room);
+ const qr='/qr.png?url='+encodeURIComponent(url);
+ return `<aside class="tv-mini-join" aria-label="Opnieuw verbinden via QR-code">
+  <img src="${html(qr)}" width="132" height="132" alt="Scan om deel te nemen of opnieuw te verbinden"/>
+  <div class="tv-mini-caption">📱 Meedoen / opnieuw verbinden</div>
+  <div class="tv-mini-room">CODE ${html(state.room)}</div>
+ </aside>`;
+}
+function shell(content,side=true){return `${decorate()}${header()}<main class="layout"><section class="stage">${content}</section>${side?scoreboard():''}</main><footer>Een avond vol verrassingen · Alleen op jullie eigen wifi</footer>${tvJoinMini()}`;}
 const button=(act,label,cls='',attrs='')=>`<button class="btn ${cls}" data-act="${act}" ${attrs}>${label}</button>`;
 const pill=t=>`<span class="pill">${t}</span>`;
 function home(){return `<main class="entry-screen"><div class="entry-panel"><div class="big-signet">🎁</div><p class="eyebrow">Sintspel 2.0</p><h1>Welkom op de<br>pakjesavond!</h1><p>De laptop is de spelleider, de TV het speelbord en iedere speler gebruikt een telefoon.</p>

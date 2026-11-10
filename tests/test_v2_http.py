@@ -23,6 +23,12 @@ def main():
             assert response.status==200
             assert response.headers.get_content_type()=='image/png'
             assert response.read(8)==b'\x89PNG\r\n\x1a\n'
+        # The persistent TV join QR uses the same existing PNG service.
+        with urllib.request.urlopen(BASE+'/v2.js',timeout=8) as response:
+            frontend=response.read().decode('utf-8')
+        assert 'function tvJoinMini()' in frontend
+        assert 'Meedoen / opnieuw verbinden' in frontend
+        assert 'state.join_url' in frontend
         ad('v2_reset',confirmation='RESET')
         st=get();assert st['host_authorized'] and st['show']['mode']=='setup'
         assert isinstance(st['show'],dict) and st['show']['hitster_count']>=100
