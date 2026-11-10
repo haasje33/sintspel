@@ -203,6 +203,12 @@ def load_state():
         return init_state()
 
 S = load_state()
+# V2 owns the active show. Leave the old mode at setup so CSV maintenance
+# remains available even when upgrading an in-progress V1 test session.
+S['mode'] = 'setup'
+S['game'] = None
+S['spin'] = None
+S['gift'] = None
 show_v2.ensure(S)
 show_v2.load_packaged_library(S, BASE / 'data' / 'music-library.json')
 if ADMIN.exists():
