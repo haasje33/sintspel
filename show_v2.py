@@ -662,8 +662,8 @@ def admin(s,payload,save):
         if g['category']=='quiplash' and g['phase']!='vote':raise ValueError('Eerst stemmen.')
         # Missing answers are not graded as correct; host decides when to reveal.
         if g['category']=='cards':
-            if len(r['answer'])<len(r['alive']):
-                raise ValueError('Wacht tot alle overgebleven spelers hebben gekozen.')
+            # Host may reveal even with zero responses, for solo testing
+            # or when a player's phone is unavailable.
             card=r['cards'][r['stage']]
             stage=r['stage'];before=r['alive'][:]
             correct=(('red' if card['s'] in 'HD' else 'black') if stage==0 else
