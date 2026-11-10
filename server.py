@@ -516,7 +516,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Content-Type',kind+('; charset=utf-8' if kind.startswith('text/') else ''))
         self.send_header('Content-Length',str(len(content)))
-        self.send_header('Cache-Control','no-cache' if kind.startswith('text/') else 'private, max-age=3600')
+        self.send_header('Cache-Control','no-store' if str(path).endswith(('.js','.css','.html')) else 'private, max-age=3600')
         self.send_header('X-Content-Type-Options','nosniff')
         self.end_headers()
         self.wfile.write(content)

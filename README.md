@@ -78,6 +78,10 @@ De server bewaart voortgang, telefoonverbindingen, punten, cadeauverdeling en de
 
 Bij foutmeldingen controleer je eerst of je de volledige hostlink gebruikt, alle apparaten op hetzelfde wifinetwerk staan en de Windows-firewall toegang op het privénetwerk toestaat.
 
+### Bij een vastlopend laadscherm
+
+De app toont nu de concrete JavaScript- of serverfout in plaats van onbeperkt op "klaarzetten" te blijven staan. Gebruik **Opnieuw proberen** of ververs de pagina; je hoeft de opgeslagen spelgegevens niet te verwijderen. De onafhankelijke hostnoodknoppen komen alleen tevoorschijn wanneer de spelshow werkelijk is begonnen. De JavaScript- en CSS-bestanden worden bij nieuwe versies opnieuw geladen.
+
 ## Technische tests
 
 De pure spelregels zijn te testen met:

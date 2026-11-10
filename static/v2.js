@@ -287,7 +287,23 @@ async function refresh(force=false){if(refreshing)return;refreshing=true;
   if(state.show?.mode==='spinning'&&isHost && !spinHandle){spinHandle=setTimeout(async()=>{spinHandle=null;try{await host('v2_open_game');await refresh(true);}catch(e){toast(e.message)}},5100);}
   if(state.show?.mode!=='spinning'&&spinHandle){clearTimeout(spinHandle);spinHandle=null;}
   setCountdowns();
- }catch(e){if(!state){$('#app').innerHTML='<main class="entry-screen"><div class="entry-panel"><h1>Kan de server niet bereiken</h1><p>Controleer of start.bat draait.</p></div></main>';}}
+ }catch(e){
+  // A previously loaded state could throw during rendering. Always show why.
+  console.error('Sintspel opstart- of weergavefout:',e);
+  lastRender='';
+  const reason=String(e?.message||e||'Onbekende fout');
+  const serverError=state?.error?String(state.error):'';
+  const currentMode=state?.show?.mode||'geen geldige spelstand ontvangen';
+  const fallback='<main class="entry-screen"><div class="entry-panel boot-error">'
+   +'<h1>De spelshow kan niet worden weergegeven</h1>'
+   +'<p>De spelgegevens worden niet verwijderd. Herladen of de server opnieuw starten is veilig.</p>'
+   +'<p><strong>Oorzaak:</strong> <code>'+html(serverError||reason)+'</code></p>'
+   +'<p><strong>Status:</strong> <code>'+html(currentMode)+'</code></p>'
+   +'<button type="button" class="btn" id="retry-show">↻ Opnieuw proberen</button>'
+   +(isHost?'<p class="fine">De noodbediening rechtsonder blijft apart beschikbaar zodra de spelshow is begonnen.</p>':'')
+   +'</div></main>';
+  const el=$('#app');if(el&&el.innerHTML!==fallback)el.innerHTML=fallback;
+ }
  finally{refreshing=false;}}
 function gatherValue(action,b){const r=round();
  if(action==='v2_answer')return b?.dataset.value;
@@ -375,6 +391,7 @@ document.addEventListener('submit',async e=>{
  await refresh(true);}catch(err){toast(err.message)}finally{busy=false;}
 });
 document.addEventListener('click',e=>{
+ if(e.target.closest('#retry-show')){refresh(true);return;}
  if(e.target.closest('[data-enable-sound]')){audioEnabled=true;sound();const x=e.target.closest('button');x.textContent='🔊 Geluid aan';}
 });
 $('#app').innerHTML=page==='home'?home():'<div class="loading">🎁 De spelshow wordt klaargezet…</div>';
