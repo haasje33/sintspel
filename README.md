@@ -52,7 +52,9 @@ In het instelscherm kun je een CSV importeren met regels in deze volgorde:
 
 De URL hierboven is fictief. De app accepteert ook meerdere regels en controleert op dubbele URL's. Bestaande kaarten uit `party-state.json` blijven behouden bij een update.
 
-De repository bevat nu **106 gecontroleerde muziekkaarten** in `data/music-library.json`. Deze laden automatisch bij het opstarten, zonder CSV-import. Twee kaarten zijn uitgesloten: één vanwege een QR-code die een ander lied afspeelt en één vanwege regionale onbeschikbaarheid van het nummer in Apple Music. Eerder lokaal geïmporteerde kaarten worden behouden; de meegeleverde bibliotheek corrigeert verouderde artiest-, titel- en jaartalgegevens van overeenkomstige kaarten. Nieuwe kaarten kun je nog steeds via CSV importeren.
+De repository bevat nu **130 gecontroleerde muziekkaarten** in `data/music-library.json`. Deze laden automatisch bij het opstarten, zonder CSV-import. Twee kaarten zijn uitgesloten: één vanwege een QR-code die een ander lied afspeelt en één vanwege regionale onbeschikbaarheid van het nummer in Apple Music. Eerder lokaal geïmporteerde kaarten worden behouden; de meegeleverde bibliotheek corrigeert verouderde artiest-, titel- en jaartalgegevens van overeenkomstige kaarten. Nieuwe kaarten kun je nog steeds via CSV importeren.
+
+Op 10 november is de collectie met **24 extra kaarten** uitgebreid, waaronder negen nummers van 2020 of later. Op verzoek blijven bij **Watermelon Sugar** zowel kaartjaar als quizjaar op **2020**. Bij **Bad Habits** staat het kaartjaar op **2024**, terwijl het quizjaar is gecorrigeerd naar **2021**.
 
 Per meegeleverde kaart bewaren we zowel `card_year` (jaar op de fysieke kaart) als `year` (het gecontroleerde quizjaar). Voor de quiz gebruikt de app `year`. Bij de QR-weergave blijft de oorspronkelijke gescande tekst exact intact, ook als de QR-inhoud met `www.` begint en geen `https://` bevat.
 

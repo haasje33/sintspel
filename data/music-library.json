@@ -741,6 +741,174 @@
       "title": "I'm Gonna Be (500 Miles)",
       "card_year": 1988,
       "year": 1988
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00144",
+      "artist": "Ray Charles",
+      "title": "Hit the Road Jack",
+      "card_year": 1961,
+      "year": 1961
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00004",
+      "artist": "Shocking Blue",
+      "title": "Venus",
+      "card_year": 1969,
+      "year": 1969
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00020",
+      "artist": "Dusty Springfield",
+      "title": "Son of a Preacher Man",
+      "card_year": 1968,
+      "year": 1968
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00278",
+      "artist": "The Isley Brothers",
+      "title": "Twist and Shout",
+      "card_year": 1962,
+      "year": 1962
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00303",
+      "artist": "The Beach Boys",
+      "title": "Good Vibrations",
+      "card_year": 1966,
+      "year": 1966
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00135",
+      "artist": "Deep Blue Something",
+      "title": "Breakfast at Tiffany’s",
+      "card_year": 1995,
+      "year": 1995
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00192",
+      "artist": "Shaggy",
+      "title": "Boombastic",
+      "card_year": 1995,
+      "year": 1995
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00231",
+      "artist": "T-Spoon",
+      "title": "Sex on the Beach",
+      "card_year": 1997,
+      "year": 1997
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00157",
+      "artist": "Darude",
+      "title": "Sandstorm",
+      "card_year": 1999,
+      "year": 1999
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00151",
+      "artist": "Luis Fonsi & Daddy Yankee",
+      "title": "Despacito",
+      "card_year": 2017,
+      "year": 2017
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00056",
+      "artist": "Gnarls Barkley",
+      "title": "Crazy",
+      "card_year": 2006,
+      "year": 2006
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00121",
+      "artist": "Snollebollekes",
+      "title": "Links Rechts",
+      "card_year": 2015,
+      "year": 2015
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00129",
+      "artist": "Gebroeders Ko",
+      "title": "Ik heb een toeter op m’n waterscooter",
+      "card_year": 2002,
+      "year": 2002
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00171",
+      "artist": "Bruno Mars",
+      "title": "Just the Way You Are",
+      "card_year": 2010,
+      "year": 2010
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00170",
+      "artist": "Helene Fischer",
+      "title": "Atemlos durch die Nacht",
+      "card_year": 2013,
+      "year": 2013
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00290",
+      "artist": "Donnie & Frans Duijts",
+      "title": "Frans Duits",
+      "card_year": 2021,
+      "year": 2021
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00040",
+      "artist": "BTS",
+      "title": "Dynamite",
+      "card_year": 2020,
+      "year": 2020
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00149",
+      "artist": "Antoon",
+      "title": "Hallo",
+      "card_year": 2022,
+      "year": 2022
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00115",
+      "artist": "Harry Styles",
+      "title": "Watermelon Sugar",
+      "card_year": 2020,
+      "year": 2020
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00253",
+      "artist": "Meghan Trainor",
+      "title": "Made You Look",
+      "card_year": 2022,
+      "year": 2022
+    },
+    {
+      "url": "www.hitstergame.com/nl/aaaa0006/00247",
+      "artist": "Mart Hoogkamer",
+      "title": "Ik Ga Zwemmen",
+      "card_year": 2021,
+      "year": 2021
+    },
+    {
+      "url": "www.hitstergame.com/nl/00253",
+      "artist": "Olivia Rodrigo",
+      "title": "drivers license",
+      "card_year": 2021,
+      "year": 2021
+    },
+    {
+      "url": "www.hitstergame.com/nl/00149",
+      "artist": "Justin Bieber",
+      "title": "Anyone",
+      "card_year": 2021,
+      "year": 2021
+    },
+    {
+      "url": "www.hitstergame.com/nl/00282",
+      "artist": "Ed Sheeran",
+      "title": "Bad Habits",
+      "card_year": 2024,
+      "year": 2021
     }
   ],
   "excluded_urls": [

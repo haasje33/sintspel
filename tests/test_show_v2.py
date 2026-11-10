@@ -182,7 +182,7 @@ class ShowTests(unittest.TestCase):
         import json
         library=Path(__file__).resolve().parents[1]/'data'/'music-library.json'
         payload=json.loads(library.read_text(encoding='utf-8'))
-        self.assertEqual(len(payload['cards']),106)
+        self.assertEqual(len(payload['cards']),130)
         excluded=set(payload['excluded_urls'])
         self.assertEqual(len(excluded),2)
         self.assertIn('www.hitstergame.com/nl/00150',excluded)
@@ -190,8 +190,23 @@ class ShowTests(unittest.TestCase):
         state={'hitster_cards':[{'id':'old','url':'https://www.hitstergame.com/nl/00150',
                                 'artist':'Gotye','title':'Somebody That I Used to Know','year':2011}]}
         game.load_packaged_library(state,library)
-        self.assertEqual(len(state['hitster_cards']),106)
+        self.assertEqual(len(state['hitster_cards']),130)
         self.assertFalse(any(c.get('title')=='Somebody That I Used to Know' for c in state['hitster_cards']))
+
+    def test_additional_music_cards_keep_requested_quiz_years(self):
+        import json
+        library=Path(__file__).resolve().parents[1]/'data'/'music-library.json'
+        payload=json.loads(library.read_text(encoding='utf-8'))
+        songs={x['title']:x for x in payload['cards']}
+        self.assertEqual(len(songs),130)
+        self.assertEqual((songs['Watermelon Sugar']['card_year'],songs['Watermelon Sugar']['year']),(2020,2020))
+        self.assertEqual((songs['Bad Habits']['card_year'],songs['Bad Habits']['year']),(2024,2021))
+        self.assertEqual(songs['Watermelon Sugar']['url'],'www.hitstergame.com/nl/aaaa0006/00115')
+        self.assertEqual(songs['Bad Habits']['url'],'www.hitstergame.com/nl/00282')
+        state={'hitster_cards':[]}
+        self.assertEqual(game.load_packaged_library(state,library),130)
+        self.assertEqual(len(state['hitster_cards']),130)
+        self.assertEqual(len({x['url'] for x in state['hitster_cards']}),130)
 
     def test_dice_yahtzee_separate(self):
         g=self.start('dice');r=g['rounds'][0]
