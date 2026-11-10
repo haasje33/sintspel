@@ -45,3 +45,15 @@ footer{text-align:center;padding:18px 20px;color:#73879b;font-size:.75rem}.visib
 #emergency-panel button:disabled{opacity:.55}
 #emergency-message{font-size:.83rem;max-width:290px;color:#f8d9a4}
 @media(max-width:600px){#emergency-panel{right:6px;bottom:6px;left:6px;padding:7px;justify-content:center}#emergency-panel button{font-size:.77rem;padding:8px 10px}}
+
+/* Large join QR for players on the TV lobby; no external QR service. */
+.tv-join{display:flex;align-items:center;justify-content:center;gap:clamp(22px,4vw,60px);margin:30px auto 0;max-width:1000px;text-align:left}
+.tv-join-qr{flex:0 0 auto;display:grid;place-items:center;background:#fff;border:7px solid #e6bc70;border-radius:22px;padding:13px;box-shadow:0 18px 45px #0008}
+.tv-join-qr img{display:block;width:clamp(180px,19vw,270px);height:auto;aspect-ratio:1;image-rendering:pixelated}
+.tv-join-instructions{min-width:0;max-width:540px}
+.tv-join-instructions h2{font-size:clamp(1.45rem,2.6vw,2.5rem);color:var(--gold);margin:0 0 13px}
+.tv-join-instructions p{line-height:1.55}
+.tv-join-instructions .join-link{font-size:clamp(.85rem,1.3vw,1.05rem);overflow-wrap:anywhere}
+.tv-join-instructions .join-room-code{font-size:1.2rem;margin-top:12px}
+.tv-join-instructions .join-room-code strong{color:var(--gold);font-size:1.45rem;letter-spacing:.12em}
+@media(max-width:690px){.tv-join{flex-direction:column;text-align:center;gap:18px}.tv-join-instructions h2{font-size:1.6rem}.tv-join-qr img{width:min(52vw,250px)}}

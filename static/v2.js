@@ -49,13 +49,22 @@ const button=(act,label,cls='',attrs='')=>`<button class="btn ${cls}" data-act="
 const pill=t=>`<span class="pill">${t}</span>`;
 function home(){return `<main class="entry-screen"><div class="entry-panel"><div class="big-signet">🎁</div><p class="eyebrow">Sintspel 2.0</p><h1>Welkom op de<br>pakjesavond!</h1><p>De laptop is de spelleider, de TV het speelbord en iedere speler gebruikt een telefoon.</p>
 <div class="actions"><a class="btn" href="/play">📱 Speel mee</a><a class="btn alt" href="/screen">📺 TV-scherm</a></div><p class="fine">Open de beveiligde hostlink op de laptop, of ga naar <code>127.0.0.1:8765/host</code> op de serverlaptop.</p></div></main>`;}
-function joinScreen(){return `<div class="stage-card welcome"><p class="eyebrow">📱 Meld je aan</p><h1>Wie ben jij?</h1><p>Vul de code van de TV in en kies jouw plek.</p><label>Viercijferige spelcode</label><input id="join-code" class="text-input" maxlength="4" inputmode="numeric" value="${html(localStorage.getItem('sintspel-room')||'')}" placeholder="1234">
+function joinScreen(){return `<div class="stage-card welcome"><p class="eyebrow">📱 Meld je aan</p><h1>Wie ben jij?</h1><p>Vul de code van de TV in en kies jouw plek.</p><label>Viercijferige spelcode</label><input id="join-code" class="text-input" maxlength="4" inputmode="numeric" value="${html(new URLSearchParams(location.search).get('room')||localStorage.getItem('sintspel-room')||'')}" placeholder="1234">
 <div class="player-options">${state.players.map((p,i)=>`<button class="player-choice" data-act="join" data-player="${p.id}" ${p.joined?'disabled':''}><span>${['🎄','⭐','🎁','🔔'][i]} ${html(p.name)}</span><small>${p.joined?'Bezet':'Meedoen →'}</small></button>`).join('')}</div></div>`;}
 function setup(){const sh=state.show;
  if(isPhone){const me=sh.has_story[state.me];return `<div class="stage-card"><p class="eyebrow">✨ Voor de start</p><h1>Welkom, ${name(state.me)}</h1><p>Voer alvast een waargebeurd feitje over jezelf in dat de andere spelers vermoedelijk niet kennen.</p>
 <div class="form-area"><textarea id="my-story" class="text-input" rows="3" placeholder="Bijvoorbeeld: Ik heb ooit..." minlength="12" maxlength="250"></textarea>${button('save_story','💾 Bewaar mijn weetje')}</div>
 <p class="subtle">${me?'✅ Je weetje is bewaard. Je kunt het nog vervangen.':'Nog geen weetje opgeslagen.'}</p><div class="waiting">⏳ De spelleider begint de spelavond.</div></div>`;}
- if(page==='screen')return `<div class="stage-card welcome"><p class="eyebrow">🎁 Vanavond is het zover</p><h1>De grote Sinterklaas<br>Spellenavond</h1><p>De spelleider maakt de show klaar. Pak de pepernoten!</p><div class="join-link">Telefoons: <strong>${html(state.join_url)}</strong> · code <strong>${html(state.room)}</strong></div></div>`;
+ if(page==='screen'){
+  const joinLink=state.join_url+'?room='+encodeURIComponent(state.room);
+  const joinQr='/qr.png?url='+encodeURIComponent(joinLink);
+  return `<div class="stage-card welcome tv-lobby"><p class="eyebrow">🎁 Vanavond is het zover</p><h1>De grote Sinterklaas<br>Spellenavond</h1><p>De spelleider maakt de show klaar. Pak de pepernoten!</p>
+  <div class="tv-join"><div class="tv-join-qr"><img src="${html(joinQr)}" alt="Scan deze QR-code met je telefoon om mee te doen" width="240" height="240"/></div>
+  <div class="tv-join-instructions"><h2>📱 Scan en speel mee!</h2><p>Scan de QR-code met de camera van je telefoon. De spelcode wordt automatisch ingevuld; kies daarna je naam.</p>
+  <p class="join-link">Of open <strong>${html(state.join_url)}</strong></p>
+  <p class="join-room-code">Spelcode: <strong>${html(state.room)}</strong></p>
+  </div></div></div>`;
+ }
  const cards=sh.hitster_cards||[];
  return `<div class="stage-card"><p class="eyebrow">🎛 Voorbereiding</p><h1>Klaar voor pakjesavond?</h1><p>Geef de vier spelers een naam en stel het aantal cadeaus per speler in.</p>
 <form id="setup-form" class="config-form">${state.players.map((p,i)=>`<div class="config-row"><label>Speler ${i+1}<input class="text-input" name="name${i}" maxlength="28" value="${html(p.name)}" required></label><label>Cadeaus<input class="text-input" name="target${i}" type="number" min="1" max="99" value="${p.target||9}" required></label></div>`).join('')}

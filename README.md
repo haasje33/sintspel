@@ -8,7 +8,7 @@ Een lokale, interactieve familiespelshow. De **laptop** draait de spelserver en 
 2. Installeer Python 3.10 of nieuwer als dat nog niet is gebeurd.
 3. Start op Windows `start.bat`; op Mac/Linux `./start.sh` of `python3 server.py`.
 4. Open op de **serverlaptop** `http://127.0.0.1:8765/host`. De lokale server opent automatisch de beveiligde spelleiderlink. Je kunt ook de volledige link uit het terminalvenster gebruiken.
-5. Open `/screen` op de TV en `/play` op vier telefoons, via het netwerkadres uit het terminalvenster.
+5. Open `/screen` op de TV. De TV toont een grote **QR-code voor spelers**. Scan deze met de telefooncamera; de spelcode is dan al ingevuld en iedereen kiest alleen nog zijn eigen naam. Handmatig `/play` openen en de code invullen kan ook.
 6. Stel de namen en het aantal cadeaus in (standaard negen per speler), verzamel de persoonlijke weetjes, en klik op **Start de spelshow**.
 7. Selecteer op de TV **Geluid aanzetten** om de alarmgeluiden van het verrassingsspel hoorbaar te maken. Zo nodig wordt hiervoor eerst een klik op de TV-browser gevraagd.
 

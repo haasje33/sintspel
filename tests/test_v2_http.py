@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Live HTTP smoke test. Run a dedicated server, e.g. PARTY_PORT=8766 python server.py."""
-import json,os,sys,urllib.request
+import json,os,sys,urllib.request,urllib.parse
 from pathlib import Path
 BASE='http://127.0.0.1:'+os.environ.get('PARTY_PORT','8766')
 ROOT=Path(__file__).resolve().parents[1]
@@ -16,6 +16,13 @@ def get(token=None):
     with urllib.request.urlopen(BASE+'/api/state'+key,timeout=8) as r:return json.load(r)
 def main():
     try:
+        # Join QR works without a host key and retains the player room code.
+        join_url='http://127.0.0.1:'+os.environ.get('PARTY_PORT','8766')+'/play?room=1234'
+        qr_url=BASE+'/qr.png?url='+urllib.parse.quote(join_url,safe='')
+        with urllib.request.urlopen(qr_url,timeout=8) as response:
+            assert response.status==200
+            assert response.headers.get_content_type()=='image/png'
+            assert response.read(8)==b'\\x89PNG\\r\\n\\x1a\\n'
         ad('v2_reset',confirmation='RESET')
         st=get();assert st['host_authorized'] and st['show']['mode']=='setup'
         assert isinstance(st['show'],dict) and st['show']['hitster_count']>=100
