@@ -18,6 +18,12 @@ def main():
     try:
         ad('v2_reset',confirmation='RESET')
         st=get();assert st['host_authorized'] and st['show']['mode']=='setup'
+        assert isinstance(st['show'],dict) and st['show']['hitster_count']>=100
+        assert len(st['show']['hitster_cards'])==st['show']['hitster_count']
+        with urllib.request.urlopen(BASE+'/api/state',timeout=8) as response:
+            tv=json.load(response)
+        assert isinstance(tv['show'],dict) and tv['show']['mode']=='setup'
+        assert 'hitster_cards' not in tv['show']
         ad('v2_configure',players=[{'name':f'Gezin {i}','target':9} for i in range(1,5)])
         tokens={}
         for p in st['players']:

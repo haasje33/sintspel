@@ -998,3 +998,22 @@ def view(s,is_admin=False,pid=None):
     if sh['mode'].startswith('grocery_'):
         gr=sh['grocery'];v['grocery']={'phase':gr['phase'],'deadline':gr['deadline'],
                                      'responses_count':len(gr['responses'])}
+        if gr['phase'] in ('study','review'):
+            v['grocery']['items']=list(gr['items'])
+        if gr['phase']=='review':
+            v['grocery']['review']=copy.deepcopy(gr['review']) if is_admin else {pid:gr['review'].get(pid)} if pid else {}
+        if pid:v['grocery']['my_response']=gr['responses'].get(pid,[])
+    if sh['mode']=='gift' and sh['gift']:
+        gift=sh['gift'];need=gift_requirement(s)
+        v['gift']={'winners':gift['winners'],'winner_index':gift['winner_index'],
+                   'choice_index':gift['choice_index'],'awarded':gift['awarded'],
+                   'category':gift['category'],'scores':gift.get('scores',{}),
+                   'requirement':need}
+    if is_admin:
+        v['stories']=copy.deepcopy(sh['stories']) if sh['mode'] in ('setup','wheel') else {}
+        v['hitster_count']=len(s.get('hitster_cards',[]))
+        v['hitster_cards']=copy.deepcopy(s.get('hitster_cards',[])) if sh['mode']=='setup' else []
+    if sh['mode']=='game' and v['game']['category']=='quiz' and v['game']['phase']=='answer':
+        v['suggestions']={'artist':sorted({c['artist'] for c in s.get('hitster_cards',[])},key=str.lower),
+                          'title':sorted({c['title'] for c in s.get('hitster_cards',[])},key=str.lower)}
+    return v

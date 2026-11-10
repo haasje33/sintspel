@@ -117,6 +117,38 @@ class ShowTests(unittest.TestCase):
         self.assertEqual(self.s['show2']['mode'],'wheel')
         self.assertIn('dice',self.s['show2']['disabled_games'])
 
+    def test_host_and_tv_state_renders_at_startup_and_during_show(self):
+        """Regression: server must never send show=null (stuck loading screen)."""
+        setup=fixture()
+        for is_admin in (True,False):
+            view=game.view(setup,is_admin=is_admin)
+            self.assertIsInstance(view,dict)
+            self.assertEqual(view['mode'],'setup')
+            self.assertIn('has_story',view)
+            self.assertEqual(len(view['games']),7)
+            if is_admin:
+                self.assertEqual(view['hitster_count'],len(setup['hitster_cards']))
+                self.assertEqual(view['hitster_cards'],setup['hitster_cards'])
+            else:
+                self.assertNotIn('hitster_cards',view)
+        self.assertEqual(game.view(self.s)['mode'],'wheel')
+        game.admin(self.s,{'action':'v2_direct','category':'dice'},self.save)
+        running=game.view(self.s,is_admin=True)
+        self.assertEqual(running['mode'],'game')
+        self.assertEqual(running['game']['category'],'dice')
+        game.admin(self.s,{'action':'v2_return_wheel'},self.save)
+        self.assertEqual(game.view(self.s)['mode'],'wheel')
+        self.s['show2']['grocery']['phase']='study'
+        self.s['show2']['grocery']['items']=['brood','melk']
+        self.s['show2']['mode']='grocery_study'
+        grocery=game.view(self.s,is_admin=True)
+        self.assertEqual(grocery['grocery']['items'],['brood','melk'])
+        self.s['show2']['mode']='gift'
+        self.s['show2']['gift']={'winners':['p1'],'winner_index':0,
+                                'choice_index':0,'category':'dice','awarded':[]}
+        gift=game.view(self.s,is_admin=True)
+        self.assertEqual(gift['gift']['requirement']['eligible'],['p1'])
+
     def test_fuzzy_examples(self):
         for a,b,k in [('queen','Queen','artist'),('Police','The Police','artist'),
                       ('Simon en Garfunkel','Simon & Garfunkel','artist'),
