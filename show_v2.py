@@ -312,7 +312,7 @@ def make_round(s,cat,i=0,game=None):
             break
         return {'cards':[{'v':x[0],'s':x[1]} for x in [first,second,third,fourth]],
                 'stage':0,'alive':ids[:],'stage_alive':ids[:], 'answers_by_stage':[],
-                'answer':{},'grades':{},'points':{},'revealed':False}
+                'answer':{},'grades':{},'points':{},'revealed':False,'deal_finished':False}
     if cat=='taboo':
         v=game['word_order'][i]
         return {'performer':ids[(game['turn_start']+i)%4],
@@ -651,8 +651,8 @@ def admin(s,payload,save):
     if act=='v2_open_vote':
         g,r=current(sh)
         if sh['mode']!='game' or g['category']!='quiplash' or g['phase']!='answer':raise ValueError('Niet beschikbaar.')
-        if len(r['answer'])!=4:raise ValueError('Wacht tot iedereen heeft geantwoord.')
-        shuffled=RNG.sample(list(r['answer']),4)
+        # Host decides when to continue, including when testing without phones.
+        shuffled=RNG.sample(list(r['answer']),len(r['answer']))
         r['option_tokens']={secrets.token_urlsafe(9):pid for pid in shuffled}
         g['phase']='vote'
         return done({'phase':'vote'})
@@ -660,11 +660,7 @@ def admin(s,payload,save):
         g,r=current(sh)
         if sh['mode']!='game' or g['phase'] not in ('answer','vote'):raise ValueError('Niets te onthullen.')
         if g['category']=='quiplash' and g['phase']!='vote':raise ValueError('Eerst stemmen.')
-        if g['category']=='three' and not r.get('guess'):raise ValueError('De onderzoeker moet eerst iemand aanwijzen.')
-        if g['category'] in ('classic','quiz','dice') and len(r.get('answer',{}))<4:
-            raise ValueError('Wacht tot de vier antwoorden binnen zijn.')
-        if g['category']=='quiplash' and len(r['votes'])<4:
-            raise ValueError('Wacht tot alle stemmen binnen zijn.')
+        # Missing answers are not graded as correct; host decides when to reveal.
         if g['category']=='cards':
             if len(r['answer'])<len(r['alive']):
                 raise ValueError('Wacht tot alle overgebleven spelers hebben gekozen.')
@@ -676,7 +672,10 @@ def admin(s,payload,save):
             yes=[pid for pid in before if r['answer'].get(pid)==correct]
             r['answers_by_stage'].append({'stage':stage,'answers':dict(r['answer']),'correct':correct,'survivors':yes})
             if not yes or len(yes)==1 or stage==3:
-                r['deal_winners']=yes if yes else before
+                # When everyone still playing answered wrongly, all share
+                # the win. Absent players must never count as winners.
+                r['deal_winners']=(yes if yes else before if len(r['answer'])==len(before) else [])
+                r['deal_finished']=True
                 award_round(s)
             else:r['stage_alive']=yes
             r['alive']=yes
@@ -711,7 +710,7 @@ def admin(s,payload,save):
     if act=='v2_next':
         g,r=current(sh)
         if sh['mode']!='game' or g['phase']!='reveal':raise ValueError('Onthul eerst het resultaat.')
-        if g['category']=='cards' and not r.get('deal_winners'):
+        if g['category']=='cards' and not (r.get('deal_finished') or r.get('deal_winners')):
             r['stage']+=1;r['answer']={};g['phase']='answer'
             return done({'advanced':True})
         if g['round_index']+1<g['total']:
@@ -778,8 +777,7 @@ def admin(s,payload,save):
             gr['phase']='waiting';gr['deadline']=None
             sh['mode']='wheel'
         elif sh['mode']=='grocery_recall':
-            if len(gr['responses'])<4 and time.time()<gr['deadline']:
-                raise ValueError('Wacht op alle vier de boodschappenlijstjes.')
+            # Host may close recall at any time; missing players receive 0.
             gr['phase']='review';gr['deadline']=None
             gr['review']=grade_grocery(s)
             sh['mode']='grocery_review'
@@ -935,6 +933,7 @@ def masked_round(s,g,r,is_admin,pid):
         if k in r:out[k]=copy.deepcopy(r[k])
     if cat=='three' and phase!='review':
         out.pop('owner',None)
+        if phase=='reveal':out['guess_skipped']=not bool(r.get('guess'))
     if cat in ('classic','quiz'):
         out['qr_url']='/hitster/qr.png?id='+r['hidden_id'] if r.get('hidden_id') else None
         out['card_id']=r.get('hidden_id')
@@ -944,8 +943,9 @@ def masked_round(s,g,r,is_admin,pid):
             if cat=='quiz' and r.get('question_type')=='boundary':out['boundary']=r['boundary']
     if cat=='cards':
         visible=(r['stage']+int(phase=='reveal'))
-        if r.get('deal_winners'):visible=4
+        if r.get('deal_finished') or r.get('deal_winners'):visible=4
         out['cards']=[c if i<visible else None for i,c in enumerate(r['cards'])]
+        out['deal_finished']=bool(r.get('deal_finished') or r.get('deal_winners'))
         out['deal_winners']=r.get('deal_winners') if r.get('revealed') else None
         if r['answers_by_stage']:
             out['stage_result']=r['answers_by_stage'][-1] if phase=='reveal' else None

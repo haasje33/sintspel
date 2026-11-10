@@ -16,6 +16,10 @@ Een lokale, interactieve familiespelshow. De **laptop** draait de spelserver en 
 
 ## Spellen
 
+**De host bepaalt het tempo.** Geen enkele ronde wacht verplicht op vier antwoorden of stemmen: de spelleider kan een vraag of stemming ook met nul, één of twee deelnemers onthullen. Ontbrekende antwoorden krijgen geen punten. Bij Kaartenduel kunnen spelers die niet hebben gekozen niet per ongeluk winnen. Ook de boodschappenronde kan zonder vier ingediende lijstjes worden afgesloten. Dit maakt testen met één of twee telefoons mogelijk; op pakjesavond wacht de host gewoon op iedereen. Bij Wie van de 3? kan de host zonder keuze naar de volgende ronde gaan.
+
+Het rad toont het gekozen spel **pas nadat** de draai-animatie stopt; daarna gaat de show verder naar het spel.
+
 Het spelrad heeft **zeven** vakken. Na elke minigame verdwijnt dat vak; wanneer alle zeven geweest zijn, begint een nieuwe cyclus. De spelshow loopt door tot alle ingestelde cadeaus zijn verdeeld.
 
 | Spel | Verloop |

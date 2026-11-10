@@ -98,7 +98,7 @@ function wheel(){const sh=state.show,spinning=sh.mode==='spinning',bag=spinning&
  const opts=bag.map((id,i)=>`<div class="wheel-label" style="--pos:${i};--total:${bag.length}">${cat(id).icon}<small>${html(cat(id).name)}</small></div>`).join('');
  return `<div class="stage-card wheel-stage"><p class="eyebrow">🎡 ${sh.regular_completed+1}e minigame</p><h1>${spinning?'Welk spel wordt het?':'Draai aan het rad!'}</h1>
  ${bag.length?`<div class="wheel-wrap"><div class="wheel-pointer"></div><div class="wheel-disc ${spinning?'spinning':''}" style="background:conic-gradient(${grad});--segments:${bag.length};--wheel-target:${stopAngle}deg">${opts}<div class="wheel-hub">🎁</div></div></div>`:'<div class="waiting">Alle spellen zijn uitgeschakeld. De spelleider kan er hieronder één opnieuw inschakelen.</div>'}
- ${spinning?`<h2 class="result-banner">${cat(sh.spin.category).icon} ${html(cat(sh.spin.category).name)}</h2>`:`<p class="subtle">Iedere minigame verdwijnt na het spelen van het rad, tot alle zeven gespeeld zijn.</p><p class="wheel-turn">🎡 <strong>${spinnerName}</strong> is aan de beurt om te draaien.</p>`}
+ ${spinning?`<h2 class="result-banner wheel-result-pending">${cat(sh.spin.category).icon} ${html(cat(sh.spin.category).name)}</h2>`:`<p class="subtle">Iedere minigame verdwijnt na het spelen van het rad, tot alle zeven gespeeld zijn.</p><p class="wheel-turn">🎡 <strong>${spinnerName}</strong> is aan de beurt om te draaien.</p>`}
  ${isPhone?(spinning?'<p class="waiting">Het rad draait! Kijk naar de TV.</p>':bag.length===0?'<p class="waiting">De spelleider schakelt een spel in…</p>':state.me===spinner?button('v2_spin','🎡 Geef het rad een slinger!','gold wheel-phone-spin'):`<p class="waiting">Wacht op ${spinnerName}…</p>`):''}
  ${isHost?(spinning?button('v2_open_game','✨ Start het gekozen spel','gold'):bag.length?button('v2_spin',`🎡 Draai namens ${spinnerName}`,'gold'):''):''}
  ${isHost&&!spinning?`<div class="test-picker"><span>Rechtstreeks testen:</span><select id="quick-game" class="text-input">${bag.map(id=>`<option value="${id}">${cat(id).icon} ${html(cat(id).name)}</option>`).join('')}</select>${bag.length?button('v2_direct','Start gekozen spel','alt'):''}</div>`:''}
@@ -150,8 +150,8 @@ function answersCount(g){const r=round();return g.category==='taboo'?`${Object.v
  g.category==='quiplash'&&g.phase==='vote'?`${r.voted?.length||0} van 4 stemmen`:
  g.category==='cards'?`${r.submitted.filter(p=>r.alive.includes(p)).length} van ${r.alive.length} antwoorden`:`${r.submitted.length} van 4 antwoorden`;}
 function revealPanel(g){const r=round(),catid=g.category;
- if(catid==='three')return `<div class="reveal-box"><h2>Verdachte aangewezen!</h2><p>De identiteit wordt pas na alle vier de onderzoeken onthuld.</p></div>`;
- if(catid==='cards')return `<div class="reveal-box"><h2>${r.deal_winners?.length?'Duel afgelopen!':'Kaart omgedraaid!'}</h2><p>${r.stage_result?'Juiste antwoord: '+html(r.stage_result.correct):''}</p>${r.deal_winners?.length?`<strong>${r.deal_winners.map(name).join(' & ')} krijgen 1 punt.</strong>`:''}</div>`;
+ if(catid==='three')return `<div class="reveal-box"><h2>${r.guess_skipped?'Onderzoek overgeslagen':'Verdachte aangewezen!'}</h2><p>${r.guess_skipped?'Geen antwoord: niemand krijgt punten.':'De identiteit wordt pas na alle vier de onderzoeken onthuld.'}</p></div>`;
+ if(catid==='cards')return `<div class="reveal-box"><h2>${r.deal_finished?'Duel afgelopen!':'Kaart omgedraaid!'}</h2><p>${r.stage_result?'Juiste antwoord: '+html(r.stage_result.correct):''}</p>${r.deal_winners?.length?`<strong>${r.deal_winners.map(name).join(' & ')} krijgen 1 punt.</strong>`:r.deal_finished?'<p>Geen geldige winnaar deze ronde.</p>':''}</div>`;
  if(catid==='quiplash')return `<div class="reveal-box"><h2>De stemmen zijn geteld!</h2><p>Meeste stemmen = één punt, bij gelijkstand ieder één punt.</p></div>`;
  if(catid==='dice')return `<div class="reveal-box"><h2>De dobbelstenen zijn geteld!</h2><p>Yahtzee-bonussen staan los van de gewone opdracht.</p></div>`;
  return `<div class="reveal-box"><h2>Het antwoord is bekend!</h2>${r.song?`<p><strong>${html(r.song.artist)} — ${html(r.song.title)} (${r.song.year})</strong></p>`:''}${r.word?`<p>${html(r.word)}</p>`:''}</div>`;
@@ -162,7 +162,7 @@ function hostRoundControls(g){const r=round();if(!isHost)return '';
  if(g.phase==='answer'){
   if(g.category==='quiplash')btns=button('v2_open_vote','🗳️ Start de stemming','gold');
   else if(g.category==='taboo')btns=!r.deadline?button('v2_start_timer','⏱ Start 60 seconden','gold'):button('v2_reveal','✅ Einde ronde / antwoorden','gold');
-  else if(g.category==='three')btns='<p class="subtle">De onderzoeker kiest op diens telefoon de verdachte.</p>';
+  else if(g.category==='three')btns=button('v2_reveal','🔍 Onderzoek afronden (ook zonder antwoord)','gold');
   else btns=button('v2_reveal',g.category==='cards'?'🃏 Draai de kaart om':'✅ Antwoorden onthullen','gold');
  }else if(g.phase==='vote')btns=button('v2_reveal','🗳️ Stemmen onthullen','gold');
  else if(g.phase==='reveal')btns=button('v2_next',g.index+1===g.total?'🏆 Naar de einduitslag':'Volgende vraag →','gold');
@@ -184,7 +184,9 @@ function phoneGame(g){const r=round(),cid=g.category;
   content=mine?`<div class="waiting">✅ Antwoord opgeslagen.</div>`:`<h2>${html(quizPrompt(r))}</h2>${expected}${typ==='artist'||typ==='title'||typ.startsWith('year')?button('send_quiz','✓ Antwoord insturen','gold'):''}`;
  }
  else if(cid==='quiplash'){
-  if(g.phase==='vote')content=r.my_vote?`<div class="waiting">✅ Stem opgeslagen!</div>`:`<h2>Op welk antwoord stem jij?</h2><div class="quip-options phone-options">${r.options.filter(o=>!o.mine).map(o=>`<button class="quip-item" data-act="v2_vote" data-value="${o.id}">${html(o.text)}</button>`).join('')}</div>`;
+  if(g.phase==='vote')content=r.my_vote?`<div class="waiting">✅ Stem opgeslagen!</div>`:
+    (r.options||[]).filter(o=>!o.mine).length?`<h2>Op welk antwoord stem jij?</h2><div class="quip-options phone-options">${r.options.filter(o=>!o.mine).map(o=>`<button class="quip-item" data-act="v2_vote" data-value="${o.id}">${html(o.text)}</button>`).join('')}</div>`:
+    '<div class="waiting">Geen andere antwoorden om op te stemmen. De spelleider kan verdergaan.</div>';
   else content=mine?'<div class="waiting">✅ Je grappige antwoord is bewaard.</div>':`<h2>${html(r.prompt)}</h2><textarea id="quippy" class="text-input" rows="3" maxlength="240" placeholder="Jouw grappigste antwoord…"></textarea>${button('send_quip','💬 Verstuur antwoord','gold')}`;
  }
  else if(cid==='three'){
@@ -304,7 +306,7 @@ async function refresh(force=false){if(refreshing)return;refreshing=true;
   const prev=state?.show?.mode;state=await response.json();
   const h=renderHash();if(force||h!==lastRender){lastRender=h;$('#app').innerHTML=viewScreen();afterRender();}
   if(state.show?.mode==='grocery_alarm'&&prev!=='grocery_alarm')sound();
-  if(state.show?.mode==='spinning'&&isHost && !spinHandle){spinHandle=setTimeout(async()=>{spinHandle=null;try{await host('v2_open_game');await refresh(true);}catch(e){toast(e.message)}},5100);}
+  if(state.show?.mode==='spinning'&&isHost && !spinHandle){spinHandle=setTimeout(async()=>{spinHandle=null;try{await host('v2_open_game');await refresh(true);}catch(e){toast(e.message)}},6500);}
   if(state.show?.mode!=='spinning'&&spinHandle){clearTimeout(spinHandle);spinHandle=null;}
   setCountdowns();
  }catch(e){
