@@ -81,6 +81,18 @@ def main():
         tokens[p['id']]=result['data']['token']
     assert all(x['joined'] for x in get()['players'])
     admin('start')
+    # Regression: choose Hitster manually, then cancel without prizes or wins.
+    before=get()
+    assert before['mode']=='wheel'
+    admin('start_selected',category='hitster')
+    during=get()
+    assert during['mode']=='game' and during['game']['category']=='hitster'
+    assert during['game']['total']==3
+    admin('cancel_game')
+    after=get()
+    assert after['mode']=='wheel' and after['gifts_given']==0
+    assert after['games_played']==0 and all(p['wins']==0 for p in after['players'])
+    print('PASS: direct Hitster selection and safe cancellation')
     selected=[run_game(tokens) for _ in range(12)]
     s=get()
     assert s['mode']=='finished'

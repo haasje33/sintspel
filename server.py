@@ -725,8 +725,42 @@ class Handler(BaseHTTPRequestHandler):
             save();return {'category':chosen}
         if action=='start_game':
             if S['mode']!='spinning':raise ValueError('Het rad draait niet.')
+            used_before=list(S.get('hitster_used', []))
             S['game']=make_game(S['spin']['category'])
+            S['game']['_cancel_restore']={'hitster_used':used_before}
             S['mode']='game';save();return {'game':S['game']['category']}
+        if action=='start_selected':
+            if S['mode']!='wheel':
+                raise ValueError('Een minigame kiezen kan alleen tussen rondes.')
+            category=str(a.get('category', ''))
+            if category not in CAT:
+                raise ValueError('Ongeldige minigame.')
+            snapshot={'bag':list(S['bag']), 'recent':list(S['recent']),
+                      'hitster_used':list(S.get('hitster_used', []))}
+            if not S['bag']:
+                S['bag']=[c['id'] for c in CATEGORIES]
+                RNG.shuffle(S['bag'])
+            if category in S['bag']:
+                S['bag'].remove(category)
+            S['recent'].append(category)
+            S['game']=make_game(category)
+            S['game']['_cancel_restore']=snapshot
+            S['spin']=None
+            S['mode']='game'
+            save()
+            return {'game':category}
+        if action=='cancel_game':
+            if S['mode']!='game' or not S['game']:
+                raise ValueError('Er is geen lopende minigame.')
+            snapshot=S['game'].get('_cancel_restore', {})
+            for key in ('bag', 'recent', 'hitster_used'):
+                if key in snapshot:
+                    S[key]=snapshot[key]
+            S['game']=None
+            S['spin']=None
+            S['mode']='wheel'
+            save()
+            return {'cancelled':True}
         if action=='open_vote':
             g=S['game']
             if S['mode']!='game' or not g or g['kind']!='creative' or g['phase']!='answer':raise ValueError('Niet beschikbaar.')

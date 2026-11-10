@@ -29,7 +29,8 @@ Een lokaal, interactief partyspel voor **vier volwassenen**, met een eigen spelr
 5. Zet vier spelersnamen klaar. Ken je het exacte aantal ingepakte cadeaus per persoon, vul die dan in; anders laat je alle vier aantallen op `0`.
 6. Open de **TV-scherm-link** op de TV (of projecteer die tab vanaf de computer).
 7. Iedereen opent de **Telefoons-link**, kiest de eigen naam en voert de viercijferige code in.
-8. Klik op **Start de spelshow** en daarna **Draai aan het rad**.
+8. Klik op **Start de spelshow** en daarna **Draai aan het rad**. Wil je Hitster testen zonder te wachten, gebruik dan op de hostpagina **Minigame direct kiezen → Hitster → Start gekozen minigame**.
+9. Via **Annuleer minigame (zonder cadeau)** kom je terug bij het rad zonder punten of cadeaus uit te delen. Bij een rechtstreeks gekozen minigame wordt ook de eerdere selectievolgorde en Hitster-gebruiksgeschiedenis hersteld.
 
 **Mac/Linux:** open Terminal in de uitgepakte map en voer `python3 server.py` uit. Of gebruik `./start.sh`.
 
@@ -37,7 +38,7 @@ Een lokaal, interactief partyspel voor **vier volwassenen**, met een eigen spelr
 
 ## Zo werkt de avond
 
-- Het digitale rad kiest een van **elf minigames**. Elke ronde duurt ongeveer 3–7 minuten.
+- Het digitale rad kiest een van **elf minigames**. Elke ronde duurt ongeveer 3–7 minuten. De spelleider kan tussen rondes ook rechtstreeks een spel kiezen.
 - De spelleider start de opdracht, onthult eventueel het antwoord en kiest bij een fysiek duel de winnaar.
 - De app telt de meeste digitale uitslagen zelf. Bij een gelijke eindstand wordt met een **echte dobbelsteen** beslist.
 - **De winnaar mag een cadeautje kiezen voor zichzelf of iemand anders**, maar alleen uit de spelers met de **laagste huidige cadeaustand**. Daardoor krijgt iedereen eerst één, dan twee, dan drie cadeaus, enzovoort.

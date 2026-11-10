@@ -89,9 +89,21 @@ function wheelHTML() {
  return `<div class="wheel-wrap"><div class="wheel-stage"><div class="wheel-pointer"></div><div id="spinningWheel" class="wheel" style="background:conic-gradient(${gradient})">${labels}</div><div class="wheel-center">🎁</div></div>
  <div class="wheel-result" id="wheel-title">${state.mode==='spinning'?'Het rad draait…':'Wat wordt het volgende spel?'}</div></div>`;
 }
+function manualChooser() {
+ if(view!=='host'||state.mode!=='wheel')return '';
+ const choices=state.categories.map(c=>`<option value="${esc(c.id)}">${esc(c.icon)} ${esc(c.name)}</option>`).join('');
+ return `<section class="callout" style="margin-top:24px">
+ <h3>🧪 Minigame direct kiezen</h3>
+ <p class="small muted">Test bijvoorbeeld Hitster zonder op het rad te wachten. Annuleer de minigame om zonder punten of cadeau terug te keren.</p>
+ <div class="form-row" style="margin-top:12px">
+ <select class="input" id="quick-category" aria-label="Kies minigame">${choices}</select>
+ <button class="btn secondary" data-action="start_selected">▶ Start gekozen minigame</button>
+ </div></section>`;
+}
 function wheelScreen() {
  return panel(`<div class="kicker">${state.gifts_given} cadeaus uitgedeeld</div><h2>${state.mode==='spinning'?'Welk spel wordt het?':'Draai aan het rad!'}</h2>
  ${wheelHTML()}
+ ${manualChooser()}
  ${view==='host'?`<div class="actions" style="justify-content:center">${state.mode==='wheel'?`<button class="btn" data-action="spin">🎡 Draai aan het rad!</button>`:
  `<button class="btn" data-action="start_game">✨ Start het gekozen spel</button>`}
  ${state.mode==='wheel'&&state.gifts_given?`<button class="btn ghost" data-action="undo_gift">↩ Laatste cadeau terugdraaien</button>`:''}
@@ -170,6 +182,7 @@ function gameScreen() {
   ${view==='host'?`<div class="actions"><button class="btn" data-action="reveal">👀 Onthul de stemmen</button></div>`:''}`;
  }
  return panel(`<div class="round-header"><span class="pill">${esc(cat.icon)} ${esc(cat.name)}</span><span class="pill">${roundInfo()}</span><span class="pill ${g.phase==='reveal'?'good':'warn'}">${statusBadge(g.phase)}</span></div>
+ ${view==='host'?'<div class="actions" style="margin-bottom:16px"><button class="btn ghost" data-action="cancel_game">↩ Annuleer minigame (zonder cadeau)</button></div>':''}
  ${question}`);
 }
 function winnerChoices(action, field) {
@@ -381,6 +394,13 @@ async function actButton(button){
   }else if(a==='finish'){
     if(!window.confirm('Is de zak echt leeg? Dan wordt de spelavond afgesloten.'))return;
     await admin('finish');
+  }else if(a==='start_selected'){
+    const category=$('#quick-category')?.value;
+    if(!category)throw new Error('Kies een minigame.');
+    await admin('start_selected',{category});
+  }else if(a==='cancel_game'){
+    if(!window.confirm('Minigame annuleren? Er wordt geen winnaar gekozen en geen cadeau uitgedeeld.'))return;
+    await admin('cancel_game');
   }else if(a==='open_vote'||a==='spin'||a==='start_game'||a==='next'||a==='undo_gift'){
     await admin(a);
   }else if(a==='reveal'){
