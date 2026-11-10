@@ -25,7 +25,7 @@ Een lokaal, interactief partyspel voor **vier volwassenen**, met een eigen spelr
 1. Open de projectmap op je computer (na het downloaden of clonen van de GitHub-repository).
 2. Dubbelklik op **`start.bat`**. Zie je 'Python not found'? Installeer Python 3.10+ en vink bij de installatie *Add Python to PATH* aan.
 3. Er verschijnt een zwart venster met drie links: **Host/laptop**, **TV-scherm** en **Telefoons**, plus een viercijferige spelcode.
-4. Open de volledige **Host/laptop-link** op je computer. Alleen deze link heeft de beheerrechten.
+4. Open de volledige **Host/laptop-link** op je computer. Alleen deze link heeft de beheerrechten. Op de serverlaptop kun je ook `http://127.0.0.1:8765/host` openen; Sintspel leidt je daar automatisch naar de beveiligde hostlink. Vanaf telefoons of TV kan dat niet.
 5. Zet vier spelersnamen klaar. Ken je het exacte aantal ingepakte cadeaus per persoon, vul die dan in; anders laat je alle vier aantallen op `0`.
 6. Open de **TV-scherm-link** op de TV (of projecteer die tab vanaf de computer).
 7. Iedereen opent de **Telefoons-link**, kiest de eigen naam en voert de viercijferige code in.
@@ -81,6 +81,8 @@ Een Spotify Web Playback-integratie zou meer vereisen, waaronder OAuth, een gesc
 - Je kunt het rad gewoon een avond lang blijven draaien of stoppen wanneer de zak leeg is.
 
 ## Problemen oplossen
+
+**Melding 'Alleen de host kan dit doen':** je gebruikt geen geldige spelleiderlink. Open op de laptop `http://127.0.0.1:8765/host` of de volledige **Host / laptop**-link uit het terminalvenster. Alleen `/host` vanaf een ander apparaat of een `/host`-link zonder geldige sleutel geeft geen hostrechten. Herstart de server na een update.
 
 **Telefoons kunnen de link niet openen:** controleer of alle apparaten op hetzelfde wifi-netwerk zitten. Bezoek op de computer `ipconfig` (Windows) of je netwerkconfiguratie en gebruik het **IPv4-adres van de computer**, gevolgd door `:8765/play`; bijvoorbeeld `http://192.168.1.20:8765/play`. Het werkelijke adres kan anders zijn. Schakel zo nodig VPN uit en controleer de privéfirewall.
 

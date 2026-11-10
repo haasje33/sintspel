@@ -326,6 +326,26 @@ async function refresh() {
   const res=await fetch('/api/state?'+qs.toString(),{cache:'no-store'});
   if(!res.ok)throw new Error('Kan de server niet bereiken.');
   state=await res.json();
+  if(view==='host'&&!state.host_authorized){
+    if(lastKey!=='unauthorized-host'){
+      document.body.className='';
+      const localHostUrl='http://127.0.0.1:'+(location.port||'8765')+'/host';
+      $('#app').innerHTML=`<main><div class="panel panel-pad">
+        <div class="kicker">🔒 Hosttoegang ontbreekt</div>
+        <h2>Open de echte spelleiderlink</h2>
+        <p style="margin-top:14px">Je hebt dit scherm geopend zonder geldige beheerderssleutel.
+        De knoppen werken daarom niet. Gebruik op de laptop de volledige link
+        achter <strong>Host / laptop</strong> in het venster van <strong>start.bat</strong>.</p>
+        <p class="muted small" style="margin-top:12px">Je kunt op dezelfde laptop ook
+        rechtstreeks de onderstaande lokale link openen. Deze werkt niet vanaf de telefoon of de TV.</p>
+        <p style="margin-top:15px"><a class="btn secondary" href="${localHostUrl}">🔓 Open host op deze laptop</a></p>
+        <p class="small muted" style="margin-top:20px">De hostlink bevat <code>/host?key=...</code>.
+        Deel die geheime link niet met spelers.</p>
+      </div></main>`;
+      lastKey='unauthorized-host';
+    }
+    return;
+  }
   const key=buildKey();
   if(key!==lastKey){lastKey=key;if(view==='phone')renderPhone();else if(view==='home')renderHome();else renderHostOrScreen();}
   const sidebar=document.querySelector('aside.sidebar');

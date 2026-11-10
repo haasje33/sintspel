@@ -432,6 +432,7 @@ def sanitized(view, token=''):
     is_admin=view=='host'
     out={
        'version':S['version'],'mode':S['mode'],'room':S['room'],
+       'host_authorized':is_admin,
        'players':[{k:v for k,v in p.items() if k!='token'} | {'joined':bool(p['token'])}
                   for p in S['players']],
        'categories':CATEGORIES,'spin':S['spin'], 'eligible':eligible(),
@@ -514,6 +515,21 @@ class Handler(BaseHTTPRequestHandler):
         parsed=urlparse(self.path)
         q=parse_qs(parsed.query)
         path=parsed.path
+        # Opening /host on the server laptop is safe and convenient.
+        # Only loopback requests with a literal localhost Host header can
+        # receive the secret host URL; never redirect remote players to it.
+        if path=='/host' and q.get('key',[''])[0]!=ADMIN_KEY:
+            local_peer=self.client_address[0] in ('127.0.0.1','::1')
+            local_host=self.headers.get('Host','').lower() in (
+                f'127.0.0.1:{PORT}',f'localhost:{PORT}')
+            if local_peer and local_host:
+                self.send_response(302)
+                self.send_header('Location','/host?key='+ADMIN_KEY)
+                self.send_header('Cache-Control','no-store')
+                self.send_header('Referrer-Policy','no-referrer')
+                self.send_header('Content-Length','0')
+                self.end_headers()
+                return
         if path=='/api/state':
             is_admin=(q.get('key',[''])[0]==ADMIN_KEY)
             view='host' if is_admin else 'player'

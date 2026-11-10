@@ -72,6 +72,14 @@ def run_game(tokens):
 
 
 def main():
+    # Missing/invalid host link must not silently behave as an authenticated host.
+    assert get()['host_authorized'] is False
+    with urllib.request.urlopen(BASE+'/api/state?key='+KEY,timeout=8) as response:
+        assert json.load(response)['host_authorized'] is True
+    with urllib.request.urlopen(BASE+'/host',timeout=8) as response:
+        assert response.geturl().endswith('/host?key='+KEY)
+        assert response.status==200
+    print('PASS: host authentication and localhost shortcut')
     s=get()
     if s['mode']!='setup':admin('reset',confirmation='RESET')
     admin('configure',players=[{'name':x,'target':3} for x in ['Ma','Eén','Twee','Drie']])
