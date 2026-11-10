@@ -16,7 +16,7 @@ import unicodedata
 import uuid
 from copy import deepcopy
 from hitster_library import MAX_CARDS, parse_cards_csv, qr_png
-import show_engine as show
+import show_v2
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -203,12 +203,8 @@ def load_state():
         return init_state()
 
 S = load_state()
-show.ensure(S)
-BUNDLED = BASE / 'data' / 'music-library.json'
-try:
-    S['bundled_cards'] = json.loads(BUNDLED.read_text(encoding='utf-8'))
-except (OSError, ValueError):
-    S['bundled_cards'] = []
+show_v2.ensure(S)
+show_v2.load_packaged_library(S, BASE / 'data' / 'music-library.json')
 if ADMIN.exists():
     ADMIN_KEY = ADMIN.read_text(encoding='utf-8').strip()
 else:
@@ -486,6 +482,7 @@ def sanitized(view, token=''):
     if is_admin:
         out['audio_files']=[{'id':m['id'],'title':m['title'],'artist':m['artist'],'year':m['year']} for m in S['music']]
         out['hitster_cards']=deepcopy(S.get('hitster_cards', []))
+    out['show']=show_v2.view(S,is_admin,me['id'] if me else None)
     return out
 
 
@@ -576,6 +573,12 @@ class Handler(BaseHTTPRequestHandler):
                 game = S.get('game') or {}
                 active = (S.get('mode') == 'game' and game.get('kind') == 'music'
                           and game['questions'][game['round']].get('card_id') == card_id)
+                current_show=S.get('show2') or {}
+                current_game=current_show.get('game') or {}
+                if current_show.get('mode')=='game' and current_game.get('category') in ('classic','quiz'):
+                    r=current_game['rounds'][current_game['round_index']]
+                    active=active or (r.get('hidden_id')==card_id
+                                      and current_game.get('phase') in ('answer','reveal','review'))
             admin_access = q.get('key', [''])[0] == ADMIN_KEY
             if not card or not (admin_access or (active and path == '/hitster/qr.png')):
                 self.send_error(404)
@@ -623,7 +626,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_error(404);return
             self.serve_file(AUDIO / mid);return
         files={'/':'index.html','/host':'index.html','/screen':'index.html','/play':'index.html',
-               '/app.js':'app.js','/style.css':'style.css','/show.js':'show.js','/show.css':'show.css'}
+               '/app.js':'app.js','/style.css':'style.css','/show.js':'show.js','/show.css':'show.css','/v2.js':'v2.js','/v2.css':'v2.css'}
         if path in files:
             self.serve_file(STATIC / files[path]);return
         if path=='/qr.png':
@@ -670,19 +673,17 @@ class Handler(BaseHTTPRequestHandler):
             payload=json.loads(self.rfile.read(length).decode('utf-8'))
             with LOCK:
                 if path=='/api/claim':result=self.claim(payload)
-                elif path=='/api/submit':result=self.submit(payload)
-                elif path=='/api/v2':
-                    authorized=self.headers.get('X-Admin-Key')==ADMIN_KEY
-                    current=player(payload.get('token',''))
-                    if payload.get('action')=='card_advance':
-                        if not authorized:raise PermissionError('Alleen de host kan dit doen.')
-                        result=show.card_advance(S)
-                    else:
-                        result=show.handle(S,payload,authorized,current['id'] if current else None)
-                    save()
+                elif path=='/api/submit':
+                    if str(payload.get('action','')).startswith('v2_'):
+                        p=player(payload.get('token',''))
+                        if not p:raise PermissionError('Meld je eerst aan.')
+                        result=show_v2.submit(S,payload,p['id'],save)
+                    else:result=self.submit(payload)
                 elif path=='/api/admin':
                     if self.headers.get('X-Admin-Key')!=ADMIN_KEY:raise PermissionError('Alleen de host kan dit doen.')
-                    result=self.admin(payload)
+                    result=(show_v2.admin(S,payload,save)
+                            if str(payload.get('action','')).startswith('v2_')
+                            else self.admin(payload))
                 else:raise ValueError('Onbekende actie.')
                 self.jsonout({'ok':True,'data':result,'version':S['version']})
         except PermissionError as e:self.jsonout({'error':str(e)},403)

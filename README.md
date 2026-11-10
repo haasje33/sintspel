@@ -1,130 +1,81 @@
-# 🎁 De Grote Sinterklaas Spellenavond
+# 🎁 De Grote Sinterklaas Spellenavond — Sintspel 2.0
 
-Een lokaal, interactief partyspel voor **vier volwassenen**, met een eigen spelrad op de TV en een eigen antwoordscherm op vier telefoons. De feestavond gebruikt jullie eigen Hitster-, Party & Co-, Yahtzee-, Pictionary-, Rummikub- en kaartspellen. Geen betaald abonnement of extra bordspel nodig.
+Een lokale, interactieve familiespelshow. De **laptop** draait de spelserver en is de spelleider; de **TV** toont het spelrad, de kaarten, animaties en uitslagen; **vier telefoons** gebruiken dezelfde wifi voor geheime antwoorden en stemmingen. Geen cloudserver, database-abonnement of externe hosting nodig.
 
-## Snel starten vanuit GitHub
+## Starten
 
-1. Download de repository met **Code → Download ZIP** op GitHub, of voer `git clone https://github.com/haasje33/sintspel.git` uit.
-2. Open de uitgepakte map `sintspel` (of de gekloonde repository).
-3. Start op Windows met **`start.bat`**, of op macOS/Linux met `python3 server.py`.
-4. Open de Host-, TV- en telefoonlinks die in het terminalvenster verschijnen.
+1. Download de repository als ZIP of gebruik `git clone` en open de map.
+2. Installeer Python 3.10 of nieuwer als dat nog niet is gebeurd.
+3. Start op Windows `start.bat`; op Mac/Linux `./start.sh` of `python3 server.py`.
+4. Open op de **serverlaptop** `http://127.0.0.1:8765/host`. De lokale server opent automatisch de beveiligde spelleiderlink. Je kunt ook de volledige link uit het terminalvenster gebruiken.
+5. Open `/screen` op de TV en `/play` op vier telefoons, via het netwerkadres uit het terminalvenster.
+6. Stel de namen en het aantal cadeaus in (standaard negen per speler), verzamel de persoonlijke weetjes, en klik op **Start de spelshow**.
+7. Selecteer op de TV **Geluid aanzetten** om de alarmgeluiden van het verrassingsspel hoorbaar te maken. Zo nodig wordt hiervoor eerst een klik op de TV-browser gevraagd.
 
-**GitHub Pages is bewust niet ingeschakeld.** Dit is een lokale multiplayer-app; de laptop draait de server en de spelers verbinden via hetzelfde wifinetwerk. Er is geen externe hosting of database nodig.
+**Let op:** houd de hostlink met `?key=...` privé. Maak geen poort van de lokale server openbaar via de router. Bij updates de server afsluiten en opnieuw starten.
 
-## Wat heb je nodig?
+## Spellen
 
-- **Eén Windows-, Mac- of Linux-computer** (de spelserver en spelleider), met **Python 3.10 of nieuwer**. Python is gratis verkrijgbaar op [python.org](https://www.python.org/downloads/).
-- **Vier telefoons** met een webbrowser op dezelfde wifi als de computer.
-- **Een TV** met een browser, of een laptop die naar de TV kan casten of aansluiten.
-- Jullie fysieke spellen, pen en papier, en de zak met cadeautjes.
+Het spelrad heeft **zeven** vakken. Na elke minigame verdwijnt dat vak; wanneer alle zeven geweest zijn, begint een nieuwe cyclus. De spelshow loopt door tot alle ingestelde cadeaus zijn verdeeld.
 
-**Er zijn geen extra Python-pakketten nodig.** Ook de QR-code wordt volledig lokaal gemaakt.
+| Spel | Verloop |
+|---|---|
+| Muziek Classic | Acht vragen. Spelers kiezen om de beurt makkelijk (1 punt), gemiddeld (2 punten) of moeilijk (4 punten). De geheime muziekkaart moet links, midden of rechts tussen twee zichtbare referentiekaarten worden geplaatst. |
+| Muziek Quiz | Acht nummers. Spelers kiezen om de beurt hun muzikale era. Een vraagtypenrad bepaalt artiest, titel, jaartal ±5, jaartal ±3 of vóór/vanaf een rond referentiejaar. Elk goed antwoord is één punt. |
+| Quiplash | Vier grappige stellingen. Iedereen geeft een eigen antwoord; daarna stemt iedereen op een ander. De meeste stemmen levert één punt op; bij gelijkstand ieder één punt. |
+| Wie van de 3? | Vier persoonlijke waargebeurde verhalen. Iedereen is één keer onderzoeker en mag maximaal tien vragen stellen aan de drie andere spelers om de eigenaar te achterhalen. Goed: drie punten; fout: de drie anderen ieder één punt. Identiteiten worden pas aan het einde onthuld. |
+| Yahtzee-sprint | Acht dobbelrondes met vijf **echte** dobbelstenen: hoogste som, meest gelijke dobbelstenen, meest van een bepaald getal en langste straat. Een Yahtzee levert altijd drie bonuspunten op; de gewone opdracht wordt daarna door de anderen uitgevochten om één punt. |
+| Kaartenduel | Acht deals met vier digitale kaarten. Voorspel rood/zwart, hoger/lager, binnen/buiten en de kaartsoort. Alleen goede voorspellers gaan door. Laatste overblijver of alle gelijk geëindigde spelers krijgen één punt. |
+| Verboden woord | Acht beurten van één minuut; iedereen omschrijft twee keer. De omschrijver ziet het geheime woord en drie verboden woorden op de eigen telefoon. De rest typt antwoorden; bij een goede gok verdient zowel de gokker als de omschrijver punten. |
 
-## Starten op Windows
+### Verrassingsspel: Boodschappenlijst
 
-1. Open de projectmap op je computer (na het downloaden of clonen van de GitHub-repository).
-2. Dubbelklik op **`start.bat`**. Zie je 'Python not found'? Installeer Python 3.10+ en vink bij de installatie *Add Python to PATH* aan.
-3. Er verschijnt een zwart venster met drie links: **Host/laptop**, **TV-scherm** en **Telefoons**, plus een viercijferige spelcode.
-4. Open de volledige **Host/laptop-link** op je computer. Alleen deze link heeft de beheerrechten. Op de serverlaptop kun je ook `http://127.0.0.1:8765/host` openen; Sintspel leidt je daar automatisch naar de beveiligde hostlink. Vanaf telefoons of TV kan dat niet.
-5. Zet vier spelersnamen klaar. Ken je het exacte aantal ingepakte cadeaus per persoon, vul die dan in; anders laat je alle vier aantallen op `0`.
-6. Open de **TV-scherm-link** op de TV (of projecteer die tab vanaf de computer).
-7. Iedereen opent de **Telefoons-link**, kiest de eigen naam en voert de viercijferige code in.
-8. Klik op **Start de spelshow** en daarna **Draai aan het rad**. Wil je Hitster testen zonder te wachten, gebruik dan op de hostpagina **Minigame direct kiezen → Hitster → Start gekozen minigame**.
-9. Via **Annuleer minigame (zonder cadeau)** kom je terug bij het rad zonder punten of cadeaus uit te delen. Bij een rechtstreeks gekozen minigame wordt ook de eerdere selectievolgorde en Hitster-gebruiksgeschiedenis hersteld.
+Dit spel staat **niet op het rad**. Bij de overgang naar spel twee of drie gaat een rood alarm af; de TV toont twintig boodschappen gedurende zestig seconden. Na twee tot vier reguliere minigames onderbreekt opnieuw een alarm de show. Iedereen krijgt drie minuten om de boodschappen op de telefoon te noteren. Eén punt per uniek correct item. De host controleert de uitslag vóór de cadeau-uitdeling.
 
-**Mac/Linux:** open Terminal in de uitgepakte map en voer `python3 server.py` uit. Of gebruik `./start.sh`.
+## Cadeauregels
 
-**Windows-firewall:** bij de eerste start kan Windows vragen of Python toegang tot het netwerk mag hebben. Sta alleen toegang op **privénetwerken** toe. Gebruik geen openbaar wifi-netwerk en open geen poort op je router naar het internet.
+- De speler(s) met de hoogste totaalscore van de minigame winnen **allemaal**.
+- Iedere winnaar mag maximaal **twee cadeaus** uit de zak laten pakken: één voor zichzelf, zolang die nog eigen cadeaus tegoed heeft, en één voor een ander.
+- Als een winnaar zelf klaar is, gaan beide keuzes naar anderen. De app laat alleen ontvangers met nog openstaande cadeaus zien; bij cadeaukeuzes voor anderen krijgen spelers met de laagste cadeaustand voorrang.
+- Zijn er minder cadeaus over dan mogelijke cadeaukeuzes, dan eindigt het spel zodra de volledige voorraad is verdeeld.
+- Een verkeerd uitgegeven cadeau kan via **Laatste cadeau terugdraaien** worden hersteld.
 
-## Zo werkt de avond
+## Muziekkaarten toevoegen
 
-- Het digitale rad kiest een van **elf minigames**. Elke ronde duurt ongeveer 3–7 minuten. De spelleider kan tussen rondes ook rechtstreeks een spel kiezen.
-- De spelleider start de opdracht, onthult eventueel het antwoord en kiest bij een fysiek duel de winnaar.
-- De app telt de meeste digitale uitslagen zelf. Bij een gelijke eindstand wordt met een **echte dobbelsteen** beslist.
-- **De winnaar mag een cadeautje kiezen voor zichzelf of iemand anders**, maar alleen uit de spelers met de **laagste huidige cadeaustand**. Daardoor krijgt iedereen eerst één, dan twee, dan drie cadeaus, enzovoort.
-- Als er per persoon een verschillend aantal cadeaus is ingevoerd, stopt de app met iemand kiezen zodra diens cadeaus allemaal op zijn.
-- Klik pas op een naam als het cadeau echt gepakt is. Verkeerd geklikt? Kies **Laatste cadeau terugdraaien**.
-- De volgende ronde begint na de cadeau-uitdeling. Met **Zak leeg · afsluiten** sluit je handmatig af (of automatisch wanneer alle ingestelde cadeaus zijn uitgedeeld).
+De app gebruikt een collectie met vier gegevens per kaart: de oorspronkelijke QR-inhoud (een URL), de **officiële artiestennaam**, de **officiële titel** en het **releasejaar**. Het kaartmateriaal zelf wordt niet als afbeelding gedigitaliseerd; de server genereert bij het afspelen een nieuwe QR-code met dezelfde informatie.
 
-## Elf minigames
+In het instelscherm kun je een CSV importeren met regels in deze volgorde:
 
-| Spelrad-vak | Wat doe je? | Benodigd | Richttijd |
-|---|---|---|---|
-| 🎵 Hitster | 3 muziekfragmenten: iedereen raadt jaartal en eventueel artiest via de telefoon | Hitster + officiële app; óf eigen audio | 5–7 min |
-| 🎯 Schat & gok | 3 schattingsvragen; dichtstbijzijnde krijgt 3 punten, tweede 1 | Alleen telefoons | 3–5 min |
-| 💬 Party & Co | 2 grappige vragen, antwoorden op telefoon, anoniem stemmen op de leukste | Alleen telefoons | 4–6 min |
-| 👀 Wie van ons? | 3 uitspraken: ieder stemt op een familielid; stemmen op de populairste keuze levert punten op | Alleen telefoons | 3–5 min |
-| 🎨 Pictionary | Iedereen tekent één geheim woord; anderen raden op hun telefoon | Papier en stiften | 5–7 min |
-| 🎭 Uitbeelden | Iedereen beeldt één geheim woord uit; anderen raden via hun telefoon | Geen | 5–7 min |
-| 🤫 Verboden woord | Iedereen omschrijft een woord zonder drie verboden woorden te noemen | Geen | 5–7 min |
-| 🎲 Yahtzee-sprint | Korte dobbelsteenuitdaging, hoogste score wint | Yahtzee / vijf dobbelstenen | 3–5 min |
-| 🧩 Rummikub-race | Iedereen puzzelt met dezelfde open stenen; meeste geldige combinaties wint | Rummikub | 3–5 min |
-| 🃏 Kaartenduel | Kort kaartspel zoals eenentwintigen, hoogste kaart of hoger/lager | Kaartspel | 3–5 min |
-| 🚗 Levensweg | Originele, absurdistische levensdilemma's met stemmen op de telefoon | Alleen telefoons | 4–6 min |
+```csv
+"https://voorbeeld.invalid/001","Voorbeeldartiest","Voorbeeldnummer",1995
+```
 
-De volgorde is **verrassend maar gevarieerd**: het rad kiest iedere soort eerst één keer voordat het dezelfde mogelijkheden opnieuw gebruikt. Het probeert bovendien lange reeksen van dezelfde soort uitdaging te vermijden. Creatieve opdrachten zijn **nieuw geschreven** en geen digitale kopieën van de Party & Co-kaarten.
+De URL hierboven is fictief. De app accepteert ook meerdere regels en controleert op dubbele URL's. Bestaande kaarten uit `party-state.json` blijven behouden bij een update.
 
-### 🎵 Belangrijk over Hitster en automatische muziek
+Een gecontroleerde basisbibliotheek kan later afzonderlijk in de repository worden opgenomen. Totdat die beschikbaar is, werkt de **CSV-import** zoals voorheen. De muziekspellen tonen een duidelijke melding als er niet genoeg geschikte kaarten zijn.
 
-Met een gewone fysieke Hitster-kaart kan deze eigen app **niet** de QR-code van Hitster uitlezen en direct het bijbehorende nummer op Spotify afspelen. De officiële Hitster-app is daarvoor de praktische, ondersteunde route: een van jullie scant de kaart en speelt de muziek af via een speaker. Iedereen voert zijn of haar gok in op de eigen telefoon, waarna de spelleider het goede jaar en eventueel de artiest invoert.
+## Antwoordcontrole
 
-Je kunt ook **je eigen audiobestanden** voorbereiden: bij de hostinstellingen upload je MP3, WAV, OGG of M4A (max. 20 MB per bestand), met titel, artiest en jaar. In dat geval kiest de app de tracks automatisch uit de lokale muziekbank en kan het TV-scherm het fragment afspelen zonder de metadata te tonen. Browsers kunnen automatisch afspelen blokkeren; gebruik dan de knop **Speel muziek**. Upload alleen audio die je mag gebruiken en verspreid deze lokale server niet op internet.
+De muziektitels en artiestennamen worden in hun officiële spelling getoond. Bij het antwoorden is de vergelijking **niet hoofdlettergevoelig**, negeert accenten en gebruikelijke leestekens, behandelt `&`, `and` en `en` gelijkwaardig, staat `the` vooraan bij artiesten toe of weg, en herkent beperkte typfouten en ingestelde aliassen. Een van meerdere artiesten is geldig. Artiest en titel krijgen suggesties uit de **hele** muziekbibliotheek, vanaf drie ingetypte tekens; vrij typen blijft mogelijk.
 
-Een Spotify Web Playback-integratie zou meer vereisen, waaronder OAuth, een geschikte account en extra ontwikkelwerk. Deze versie doet dat niet en belooft dus geen automatische Spotify-weergave van jullie Hitster-deck.
+Bij de einduitslag kan de host foutgerekende antwoorden alsnog goedkeuren of eerdere beoordelingen aanpassen. Pas na **Uitslag bevestigen** begint de cadeau-uitdeling. Bevestigde alternatieve muziekantwoorden kunnen worden onthouden zonder de officiële weergavenaam te wijzigen.
 
-### 👩‍👦 Geschikt voor verschillende leeftijden
+## Opslag, netwerk en updates
 
-- Geen afvalrondes: iedereen doet steeds mee.
-- Ruime tijd voor tekenen, uitbeelden en omschrijven; géén snelle reactietoets of reflexspel.
-- Muziek, grappige antwoorden, kennis, tactiek en geluk wisselen af.
-- Bij Pictionary/uitbeelden krijgt alleen de uitvoerende speler het geheime woord op diens telefoon. Het TV-scherm verklapt niets.
-- Je kunt het rad gewoon een avond lang blijven draaien of stoppen wanneer de zak leeg is.
+De server bewaart voortgang, telefoonverbindingen, punten, cadeauverdeling en de stand van het verrassingsspel in `party-state.json` (lokaal; niet committen). De beheerlink wordt beveiligd met `.host-key`. Ook de bestaande kaartencollectie in de lokale spelstand blijft geladen.
 
-## Problemen oplossen
+**Bewaar** `party-state.json`, `.host-key` en eventuele eigen audiobestanden bij een software-update. Bij een ZIP-update kun je de nieuwe code uitpakken en deze bestanden terugzetten. `git pull` laat door `.gitignore` uitgesloten gebruikersbestanden normaal ongemoeid.
 
-**Melding 'Alleen de host kan dit doen':** je gebruikt geen geldige spelleiderlink. Open op de laptop `http://127.0.0.1:8765/host` of de volledige **Host / laptop**-link uit het terminalvenster. Alleen `/host` vanaf een ander apparaat of een `/host`-link zonder geldige sleutel geeft geen hostrechten. Herstart de server na een update.
+Bij foutmeldingen controleer je eerst of je de volledige hostlink gebruikt, alle apparaten op hetzelfde wifinetwerk staan en de Windows-firewall toegang op het privénetwerk toestaat.
 
-**Telefoons kunnen de link niet openen:** controleer of alle apparaten op hetzelfde wifi-netwerk zitten. Bezoek op de computer `ipconfig` (Windows) of je netwerkconfiguratie en gebruik het **IPv4-adres van de computer**, gevolgd door `:8765/play`; bijvoorbeeld `http://192.168.1.20:8765/play`. Het werkelijke adres kan anders zijn. Schakel zo nodig VPN uit en controleer de privéfirewall.
+## Technische tests
 
-**Het verkeerde IP-adres verschijnt op de startpagina (bijvoorbeeld door een VPN):** start de server met de omgevingsvariabele `PARTY_IP` ingesteld op het lokale IPv4-adres. Op Windows in Opdrachtprompt: `set PARTY_IP=192.168.1.20` en daarna `py -3 server.py`. Op macOS/Linux: `PARTY_IP=192.168.1.20 python3 server.py`. Vervang het voorbeeldadres door je eigen LAN-adres.
+De pure spelregels zijn te testen met:
 
-**Smart TV heeft geen geschikte browser:** open de `/screen`-pagina op de laptop en cast die tab of gebruik een videokabel. De laptop kan de `/host`-pagina in een ander browservenster houden.
+```bash
+python tests/test_show_v2.py -v
+```
 
-**Iemand zit vast op 'plek bezet':** klik als host bij de betreffende speler op **Ontkoppel telefoon** in de pakjesstand. Diegene kan zich daarna op een ander toestel of in dezelfde browser opnieuw aanmelden. De cadeaustand blijft bewaard. (Bij normaal verversen onthoudt de telefoon de toegang automatisch.)
+De bestaande HTTP-rooktest is gebouwd voor de vorige spelversie; de nieuwe spelmotor gebruikt een nieuwe reeks `v2_`-acties en wordt afzonderlijk getest.
 
-**QR-code ontbreekt:** gebruik de uitgeschreven link. De QR-codegenerator is al meegeleverd, dus er hoeft niets te worden geïnstalleerd.
-
-**Muziek begint niet vanzelf:** klik op **Speel muziek** op de TV of host. Dat is een browserbeveiliging, geen defect.
-
-**Game loopt vast op een antwoord:** de host kan onthullen en naar de volgende vraag gaan zonder op alle vier telefoons te wachten. Er hoeft niemand af te vallen.
-
-## Privacy en opslag
-
-De server draait op **jouw eigen computer**, niet in de cloud. De namen, scores, cadeaustanden en muziekbibliotheek staan lokaal in `party-state.json`, `.host-key` en `audio/`. De bestanden worden automatisch gemaakt bij de eerste start. Je kunt ze na de avond verwijderen. Bewaar de volledige hostlink privé en zet geen poort 8765 open op je router. De app is bedoeld voor een vertrouwd thuisnetwerk, niet voor publiek internet.
-
-## Technisch
-
-Alleen Python-standaardbibliotheek voor de server, gewone HTML/CSS/JS voor de interface, JSON-polling voor de synchronisatie. Geen npm-installatie, database of internetserver nodig. Starten met `python3 server.py`. Voor ontwikkeltests: `python tests/test_http.py` terwijl de server draait (dit reset de speldata!).
-
-## Hitster-kaarten importeren en op de TV testen
-
-Vanaf deze versie kun je een **CSV met originele Hitster QR-URL's** importeren. Dat werkt volledig lokaal zonder de QR-kaarten te fotograferen of Spotify/Apple Music te integreren.
-
-1. Maak met Apple **Opdrachten** een scanner die per Hitster-kaart de QR-URL, artiest, titel en het jaartal vastlegt. Zet iedere kaart op één CSV-regel in de volgorde **URL, artiest, titel, jaar**. Een kopregel is niet verplicht.
-2. Kopieer of mail het CSV-bestand naar de laptop. Voorbeeld met *fictieve* URL's:
-
-   ```csv
-   "https://voorbeeld.invalid/kaart001","ABBA","Dancing Queen",1976
-   "https://voorbeeld.invalid/kaart002","Queen","Bohemian Rhapsody",1975
-   ```
-
-3. Start de server en open de **beveiligde hostlink**. Ga vóór de eerste spelronde naar **Hitster QR-bibliotheek**, kies het CSV-bestand en klik op **Importeer Hitster-kaarten**.
-4. Je ziet per kaart de artiest, titel, het jaar en de opgeslagen QR-inhoud. Bestaande URL's worden niet dubbel geïmporteerd. Ongeldige regels worden gerapporteerd en overgeslagen.
-5. Klik bij één kaart op **📺 Test QR**. Een apart scherm toont de opnieuw gegenereerde QR-code, zonder het antwoord. Toon dit scherm groot op je TV en scan het met de **officiële Hitster-app**. Controleer met de originele kaart of het juiste nummer wordt geopend.
-6. Tijdens een Hitster-minigame toont het TV-scherm daarna automatisch QR-codes van opgeslagen kaarten. Titel, artiest en jaar verschijnen pas na het beantwoorden. De app probeert decennia binnen de ronde af te wisselen en voorkomt herhaling zolang ongebruikte kaarten beschikbaar zijn.
-
-**Belangrijk:** de software bewaart exact de ingescande URL (zonder verkorten, redirects volgen of aanpassen), maar de nieuwe QR-afbeelding kan een ander pixelpatroon hebben. Of de officiële Hitster-app opnieuw gegenereerde codes accepteert, moet je met de eerste echte kaart controleren. De app kan dit niet zelf bevestigen.
-
-**Privacy:** de bibliotheek blijft in `party-state.json` op de laptop, die door `.gitignore` uit de openbare GitHub-repository wordt gehouden. Deel de geheime hostlink niet. Er is geen koppeling met Hitster of een streaming-API.
-
-**Formaat:** UTF-8 CSV met (optioneel) kolommen `URL,Artiest,Titel,Jaar` en komma's of puntkomma's. Vul aanhalingstekens binnen titels in CSV in als dubbele `""`; de scanner kan dat automatisch afhandelen. Maximaal 300 KB per import en 2000 kaarten in de bibliotheek. De import werkt vóór het starten van de spelavond. Een reset van de scores bewaart de Hitster-bibliotheek.
+De toepassing is bedoeld voor een besloten privésessie. Voeg alleen content toe waarvan je de vereiste gebruiksrechten hebt; openbaar publiceren van de repository geeft op zichzelf geen rechten op bronmateriaal.
