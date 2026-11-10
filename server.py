@@ -16,6 +16,7 @@ import unicodedata
 import uuid
 from copy import deepcopy
 from hitster_library import MAX_CARDS, parse_cards_csv, qr_png
+import show_engine as show
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -202,6 +203,12 @@ def load_state():
         return init_state()
 
 S = load_state()
+show.ensure(S)
+BUNDLED = BASE / 'data' / 'music-library.json'
+try:
+    S['bundled_cards'] = json.loads(BUNDLED.read_text(encoding='utf-8'))
+except (OSError, ValueError):
+    S['bundled_cards'] = []
 if ADMIN.exists():
     ADMIN_KEY = ADMIN.read_text(encoding='utf-8').strip()
 else:
@@ -534,8 +541,34 @@ class Handler(BaseHTTPRequestHandler):
             is_admin=(q.get('key',[''])[0]==ADMIN_KEY)
             view='host' if is_admin else 'player'
             with LOCK:self.jsonout(sanitized(view,q.get('token',[''])[0]));return
+        if path=='/api/v2/state':
+            is_admin=q.get('key',[''])[0]==ADMIN_KEY
+            current=player(q.get('token',[''])[0])
+            with LOCK:self.jsonout(show.public(S,is_admin,current['id'] if current else None))
+            return
         if path=='/api/health':
             self.jsonout({'ok':True,'room':S['room']});return
+        if path=='/v2/qr.png':
+            card_id=q.get('id',[''])[0]
+            with LOCK:
+                card=next((c for c in show.cards(S) if c['id']==card_id),None)
+                v=show.ensure(S)
+                g=v.get('game') or {}
+                active=(v.get('mode')=='game' and g.get('category') in ('classic','quiz') and
+                        (g.get('question') or {}).get('card_id')==card_id)
+                admin_access=q.get('key',[''])[0]==ADMIN_KEY
+            if not card or not (admin_access or active):
+                self.send_error(404);return
+            try:data=qr_png(card['url'])
+            except (ValueError,OverflowError):
+                self.send_error(400);return
+            self.send_response(200)
+            self.send_header('Content-Type','image/png')
+            self.send_header('Content-Length',str(len(data)))
+            self.send_header('Cache-Control','no-store')
+            self.end_headers()
+            self.wfile.write(data)
+            return
         if path in ('/hitster/qr.png', '/hitster/test'):
             card_id = q.get('id', [''])[0]
             with LOCK:
@@ -590,7 +623,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_error(404);return
             self.serve_file(AUDIO / mid);return
         files={'/':'index.html','/host':'index.html','/screen':'index.html','/play':'index.html',
-               '/app.js':'app.js','/style.css':'style.css'}
+               '/app.js':'app.js','/style.css':'style.css','/show.js':'show.js','/show.css':'show.css'}
         if path in files:
             self.serve_file(STATIC / files[path]);return
         if path=='/qr.png':
@@ -638,6 +671,15 @@ class Handler(BaseHTTPRequestHandler):
             with LOCK:
                 if path=='/api/claim':result=self.claim(payload)
                 elif path=='/api/submit':result=self.submit(payload)
+                elif path=='/api/v2':
+                    authorized=self.headers.get('X-Admin-Key')==ADMIN_KEY
+                    current=player(payload.get('token',''))
+                    if payload.get('action')=='card_advance':
+                        if not authorized:raise PermissionError('Alleen de host kan dit doen.')
+                        result=show.card_advance(S)
+                    else:
+                        result=show.handle(S,payload,authorized,current['id'] if current else None)
+                    save()
                 elif path=='/api/admin':
                     if self.headers.get('X-Admin-Key')!=ADMIN_KEY:raise PermissionError('Alleen de host kan dit doen.')
                     result=self.admin(payload)
