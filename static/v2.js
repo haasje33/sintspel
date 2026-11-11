@@ -6,6 +6,7 @@ const key=new URLSearchParams(location.search).get('key')||'';
 const tokenKey='sintspel-phone-token';
 let token=localStorage.getItem(tokenKey)||'',state=null,lastRender='',busy=false,lastMode='',lastReveal='',audioEnabled=false,audioContext=null,spinHandle=null;
 let cardFlash='',lastError='',importNotice='';
+let alarmVoices=null;
 const html=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pl=id=>state?.players?.find(p=>p.id===id);
 const name=id=>html(pl(id)?.name||'Speler');
@@ -26,18 +27,41 @@ async function request(path,body={},admin=false){
 }
 async function host(action,data={}){return request('/api/admin',{action,...data},true)}
 async function send(action,data={}){return request('/api/submit',{action,token,...data})}
-function sound(){if(!audioEnabled)return;try{
- const A=window.AudioContext||window.webkitAudioContext;
- audioContext ||=new A();if(audioContext.state==='suspended')audioContext.resume();
- [0,.18,.44,.61].forEach((delay,i)=>{const o=audioContext.createOscillator(),g=audioContext.createGain();
- o.type='square';o.frequency.value=i%2?700:520;g.gain.value=.045;
- o.connect(g);g.connect(audioContext.destination);const t=audioContext.currentTime+delay;
- g.gain.setValueAtTime(.045,t);g.gain.exponentialRampToValueAtTime(.001,t+.13);
- o.start(t);o.stop(t+.14);});
-}catch(e){console.warn('Geluid niet beschikbaar',e);}}
+// A continuous, two-tone wavering warning siren. Only the TV plays it,
+// and only after someone has activated sound in that browser.
+function stopAlarmSound(){
+ if(!alarmVoices)return;
+ const {oscillators,gain,nodes}=alarmVoices;alarmVoices=null;
+ try{const t=audioContext.currentTime;gain.gain.cancelScheduledValues(t);
+   gain.gain.setTargetAtTime(.0001,t,.035);
+   oscillators.forEach(o=>o.stop(t+.18));
+   setTimeout(()=>nodes.forEach(n=>{try{n.disconnect()}catch(_){}}),250);
+ }catch(e){console.warn('Sirene stoppen mislukt',e);}
+}
+function sound(){
+ if(!audioEnabled||page!=='screen'||alarmVoices)return;
+ try{
+  const A=window.AudioContext||window.webkitAudioContext;
+  if(!A)return;
+  audioContext ||=new A();
+  if(audioContext.state==='suspended')audioContext.resume().catch(e=>console.warn('Audio activering nodig',e));
+  const t=audioContext.currentTime+.04;
+  const carrier=audioContext.createOscillator(),sweep=audioContext.createOscillator();
+  const sweepDepth=audioContext.createGain(),gain=audioContext.createGain();
+  carrier.type='sawtooth';carrier.frequency.setValueAtTime(660,t);
+  sweep.type='sine';sweep.frequency.setValueAtTime(.88,t);
+  sweepDepth.gain.setValueAtTime(285,t);
+  sweep.connect(sweepDepth);sweepDepth.connect(carrier.frequency);
+  carrier.connect(gain);gain.connect(audioContext.destination);
+  gain.gain.setValueAtTime(.0001,t);
+  gain.gain.exponentialRampToValueAtTime(.052,t+.16);
+  sweep.start(t);carrier.start(t);
+  alarmVoices={oscillators:[carrier,sweep],gain,nodes:[carrier,sweep,sweepDepth,gain]};
+ }catch(e){console.warn('Sirene niet beschikbaar',e);}
+}
 function decorate(){return `<div class="decor star-one">✦</div><div class="decor star-two">✦</div><div class="decor star-three">✦</div>`;}
 function header(){return `<header class="topbar ${isHost?'host-topbar':''}"><div class="brand"><span class="brand-signet">🎁</span><div><b>DE GROTE</b><strong>SINTERKLAAS SPELLENAVOND</strong></div></div>
-<div class="head-right"><span class="head-label">${page==='host'?'🎛 Spelleider':page==='screen'?'📺 Spelshow':'📱 Speler'}</span><span class="roomcode">CODE ${html(state.room)}</span>${page==='screen'?'<button class="sound-toggle" data-enable-sound>🔈 Geluid aanzetten</button>':''}</div></header>`;}
+<div class="head-right"><span class="head-label">${page==='host'?'🎛 Spelleider':page==='screen'?'📺 Spelshow':'📱 Speler'}</span><span class="roomcode">CODE ${html(state.room)}</span>${page==='screen'?`<button class="sound-toggle" data-enable-sound aria-pressed="${audioEnabled}">${audioEnabled?'🔊 Geluid aan':'🔈 Geluid aanzetten'}</button>`:''}</div></header>`;}
 function scoreboard(){const show=state.show;return `<aside class="sidebar">
 <h3>🎁 De cadeauzak</h3><div class="gift-progress"><div class="gift-fill" style="width:${Math.max(0,100-100*show.remaining_gifts/Math.max(1,state.players.reduce((t,p)=>t+p.target,0)))}%"></div></div>
 <p class="small subtle">${show.remaining_gifts} cadeaus te gaan · ${show.gifts_given} uitgedeeld</p>
@@ -232,9 +256,16 @@ function giftScreen(){const sh=state.show,g=sh.gift,need=g?.requirement;if(!g||!
  <div class="choice-grid">${need.eligible.map(pid=>isHost?`<button class="gift-choice" data-act="v2_give" data-value="${pid}">🎁 ${name(pid)}<small>${pl(pid)?.received}/${pl(pid)?.target} ontvangen</small></button>`:`<div class="gift-choice">🎁 ${name(pid)}<small>${pl(pid)?.received}/${pl(pid)?.target} ontvangen</small></div>`).join('')}</div>
  <div class="prize-footer">${g.awarded.length} cadeau${g.awarded.length===1?'':'s'} deze minigame uitgedeeld · ${sh.remaining_gifts} cadeaus over</div>
  ${isHost?button('v2_undo_gift','↩ Laatste cadeau terugdraaien','soft-btn'):''}</div>`;}
+const alarmSvg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18v-6a5 5 0 0 1 10 0v6"/><path d="M5 21h14"/><path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="M2 12h2"/><path d="m19.07 4.93-1.41 1.41"/><path d="M20 12h2"/><path d="M4 18h16"/></svg>';
 function groceryScreen(){const gr=state.show.grocery,mode=state.show.mode;
- if(mode==='grocery_alarm')return `<div class="alarm-screen"><div class="alarm-siren">🚨</div><p class="eyebrow">ONVERWACHTE ONDERBREKING</p><h1>ALARM!</h1><h2>${gr.phase==='alarm_intro'?'ONTHOUD DE BOODSCHAPPEN!':'WAT STOND ER OP DE LIJST?'}</h2>
- <p>De spelshow wordt even onderbroken…</p>${isHost?button('v2_grocery_show','▶ Start de verrassing','alarm-btn'):''}</div>`;
+ if(mode==='grocery_alarm')return `<div class="alarm-screen" role="alert">
+  <span class="alarm-beacon alarm-beacon-left" aria-hidden="true">${alarmSvg}</span>
+  <span class="alarm-beacon alarm-beacon-right" aria-hidden="true">${alarmSvg}</span>
+  <div class="alarm-copy"><p class="eyebrow">ONVERWACHTE ONDERBREKING</p>
+  <h1>ALARM!</h1>
+  <h2>${gr.phase==='alarm_intro'?'ONTHOUD DE BOODSCHAPPEN!':'WAT STOND ER OP DE LIJST?'}</h2>
+  <p>De spelshow wordt even onderbroken…</p>
+  ${isHost?button('v2_grocery_show','▶ Start de verrassing','alarm-btn'):''}</div></div>`;
  if(mode==='grocery_study')return `<div class="stage-card groceries"><p class="eyebrow">🛒 Onthoud de boodschappen</p><h1>20 boodschappen · 60 seconden</h1>
  ${isPhone?'<div class="waiting">👀 Kijk naar de televisie en probeer alle boodschappen te onthouden.</div>':`<div class="grocery-list">${(gr.items||[]).map((x,i)=>`<div><span>${i+1}.</span>${html(x)}</div>`).join('')}</div>`}
  <div class="timer-hero"><span data-countdown="${gr.deadline}">01:00</span></div>${isHost?button('v2_grocery_close','Verder naar het rad →','alt','data-after-timer="true"'):''}</div>`;
@@ -305,7 +336,7 @@ async function refresh(force=false){if(refreshing)return;refreshing=true;
   if(!response.ok)throw Error('Server niet bereikbaar');
   const prev=state?.show?.mode;state=await response.json();
   const h=renderHash();if(force||h!==lastRender){lastRender=h;$('#app').innerHTML=viewScreen();afterRender();}
-  if(state.show?.mode==='grocery_alarm'&&prev!=='grocery_alarm')sound();
+  if(page==='screen'){if(state.show?.mode==='grocery_alarm')sound();else stopAlarmSound();}
   if(state.show?.mode==='spinning'&&isHost && !spinHandle){spinHandle=setTimeout(async()=>{spinHandle=null;try{await host('v2_open_game');await refresh(true);}catch(e){toast(e.message)}},6500);}
   if(state.show?.mode!=='spinning'&&spinHandle){clearTimeout(spinHandle);spinHandle=null;}
   setCountdowns();
@@ -414,7 +445,7 @@ document.addEventListener('submit',async e=>{
 });
 document.addEventListener('click',e=>{
  if(e.target.closest('#retry-show')){refresh(true);return;}
- if(e.target.closest('[data-enable-sound]')){audioEnabled=true;sound();const x=e.target.closest('button');x.textContent='🔊 Geluid aan';}
+ if(e.target.closest('[data-enable-sound]')){audioEnabled=!audioEnabled;const x=e.target.closest('button');if(audioEnabled){const A=window.AudioContext||window.webkitAudioContext;if(A){audioContext ||=new A();audioContext.resume().catch(()=>{});}if(state?.show?.mode==='grocery_alarm')sound();}else stopAlarmSound();x.textContent=audioEnabled?'🔊 Geluid aan':'🔈 Geluid aanzetten';x.setAttribute('aria-pressed',String(audioEnabled));}
 });
 $('#app').innerHTML=page==='home'?home():'<div class="loading">🎁 De spelshow wordt klaargezet…</div>';
 refresh(true);setInterval(()=>refresh(),950);setInterval(setCountdowns,180);
