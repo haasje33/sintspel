@@ -1,6 +1,6 @@
 party-state.json
+party-state.tmp
+party-state.beschadigd-*.json
 .host-key
-audio/*
-!audio/.gitkeep
 __pycache__/
 *.pyc

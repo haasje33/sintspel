@@ -6,6 +6,8 @@ const key=new URLSearchParams(location.search).get('key')||'';
 const tokenKey='sintspel-phone-token';
 let token=localStorage.getItem(tokenKey)||'',state=null,lastRender='',busy=false,lastMode='',lastReveal='',audioEnabled=false,audioContext=null,spinHandle=null;
 let cardFlash='',lastError='',importNotice='';
+let alarmVoices=null,clockOffset=0,revealedWord='';
+const serverNow=()=>Date.now()/1000+clockOffset;
 const html=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pl=id=>state?.players?.find(p=>p.id===id);
 const name=id=>html(pl(id)?.name||'Speler');
@@ -26,22 +28,44 @@ async function request(path,body={},admin=false){
 }
 async function host(action,data={}){return request('/api/admin',{action,...data},true)}
 async function send(action,data={}){return request('/api/submit',{action,token,...data})}
-function sound(){if(!audioEnabled)return;try{
- const A=window.AudioContext||window.webkitAudioContext;
- audioContext ||=new A();if(audioContext.state==='suspended')audioContext.resume();
- [0,.18,.44,.61].forEach((delay,i)=>{const o=audioContext.createOscillator(),g=audioContext.createGain();
- o.type='square';o.frequency.value=i%2?700:520;g.gain.value=.045;
- o.connect(g);g.connect(audioContext.destination);const t=audioContext.currentTime+delay;
- g.gain.setValueAtTime(.045,t);g.gain.exponentialRampToValueAtTime(.001,t+.13);
- o.start(t);o.stop(t+.14);});
-}catch(e){console.warn('Geluid niet beschikbaar',e);}}
+// A continuous, two-tone wavering warning siren. Only the TV plays it,
+// and only after someone has activated sound in that browser.
+function stopAlarmSound(){
+ if(!alarmVoices)return;
+ const {oscillators,gain,nodes}=alarmVoices;alarmVoices=null;
+ try{const t=audioContext.currentTime;gain.gain.cancelScheduledValues(t);
+   gain.gain.setTargetAtTime(.0001,t,.035);
+   oscillators.forEach(o=>o.stop(t+.18));
+   setTimeout(()=>nodes.forEach(n=>{try{n.disconnect()}catch(_){}}),250);
+ }catch(e){console.warn('Sirene stoppen mislukt',e);}
+}
+function sound(){
+ if(!audioEnabled||page!=='screen'||alarmVoices)return;
+ try{
+  const A=window.AudioContext||window.webkitAudioContext;
+  if(!A)return;
+  audioContext ||=new A();
+  if(audioContext.state==='suspended')audioContext.resume().catch(e=>console.warn('Audio activering nodig',e));
+  const t=audioContext.currentTime+.04;
+  const carrier=audioContext.createOscillator(),sweep=audioContext.createOscillator();
+  const sweepDepth=audioContext.createGain(),gain=audioContext.createGain();
+  carrier.type='sawtooth';carrier.frequency.setValueAtTime(660,t);
+  sweep.type='sine';sweep.frequency.setValueAtTime(.88,t);
+  sweepDepth.gain.setValueAtTime(285,t);
+  sweep.connect(sweepDepth);sweepDepth.connect(carrier.frequency);
+  carrier.connect(gain);gain.connect(audioContext.destination);
+  gain.gain.setValueAtTime(.0001,t);
+  gain.gain.exponentialRampToValueAtTime(.052,t+.16);
+  sweep.start(t);carrier.start(t);
+  alarmVoices={oscillators:[carrier,sweep],gain,nodes:[carrier,sweep,sweepDepth,gain]};
+ }catch(e){console.warn('Sirene niet beschikbaar',e);}
+}
 function decorate(){return `<div class="decor star-one">✦</div><div class="decor star-two">✦</div><div class="decor star-three">✦</div>`;}
 function header(){return `<header class="topbar ${isHost?'host-topbar':''}"><div class="brand"><span class="brand-signet">🎁</span><div><b>DE GROTE</b><strong>SINTERKLAAS SPELLENAVOND</strong></div></div>
-<div class="head-right"><span class="head-label">${page==='host'?'🎛 Spelleider':page==='screen'?'📺 Spelshow':'📱 Speler'}</span><span class="roomcode">CODE ${html(state.room)}</span>${page==='screen'?'<button class="sound-toggle" data-enable-sound>🔈 Geluid aanzetten</button>':''}</div></header>`;}
-function scoreboard(){const show=state.show;return `<aside class="sidebar">
-<h3>🎁 De cadeauzak</h3><div class="gift-progress"><div class="gift-fill" style="width:${Math.max(0,100-100*show.remaining_gifts/Math.max(1,state.players.reduce((t,p)=>t+p.target,0)))}%"></div></div>
-<p class="small subtle">${show.remaining_gifts} cadeaus te gaan · ${show.gifts_given} uitgedeeld</p>
-${state.players.map((p,i)=>`<div class="player-row"><div class="avatar">${['👑','🎄','⭐','🔔'][i]}</div><div class="player-details"><strong>${html(p.name)}</strong><small>${p.wins}× gewonnen</small></div><div class="player-gifts"><b>${p.received}/${p.target}</b><small>cadeaus</small></div></div>`).join('')}
+<div class="head-right"><span class="head-label">${page==='host'?'🎛 Spelleider':page==='screen'?'📺 Spelshow':'📱 Speler'}</span><span class="roomcode">CODE ${html(state.room)}</span>${page==='screen'?`<button class="sound-toggle" data-enable-sound aria-pressed="${audioEnabled}">${audioEnabled?'🔊 Geluid aan':'🔈 Geluid aanzetten'}</button>`:''}</div></header>`;}
+function scoreboard(){return `<aside class="sidebar">
+<h3>🎄 De spelers</h3>
+${state.players.map((p,i)=>`<div class="player-row"><div class="avatar">${['👑','🎄','⭐','🔔'][i]}</div><div class="player-details"><strong>${html(p.name)}</strong>${isHost?`<small>${p.joined?`📱 verbonden · ${button('v2_release_seat','Ontkoppel','link-btn',`data-value="${p.id}"`)}`:'📵 geen telefoon'}</small>`:''}</div></div>`).join('')}
 ${isHost?`<div class="side-tools"><button class="soft" data-act="v2_reset">↺ Nieuwe spelavond</button><a class="soft" href="/screen" target="_blank" rel="noopener">📺 TV-scherm</a></div>`:''}
 </aside>`;}
 function tvJoinMini(){
@@ -55,17 +79,47 @@ function tvJoinMini(){
   <div class="tv-mini-room">CODE ${html(state.room)}</div>
  </aside>`;
 }
-function shell(content,side=true){return `${decorate()}${header()}<main class="layout ${side?'with-sidebar':'full-stage'}"><section class="stage">${content}</section>${side?scoreboard():''}</main><footer>Een avond vol verrassingen · Alleen op jullie eigen wifi</footer>${tvJoinMini()}`;}
+// Host dashboard layout, after the Figma frame "HOST ★ Dashboard".
+const PLAYER_DOTS=['#36B5E2','#F13881','#FFD06D','#A15BE2'];
+function hostNav(){const mode=state.show?.mode||'setup';
+ const phase=mode==='setup'?'setup':mode==='wheel'||mode==='spinning'?'wheel':mode==='game'?'game':mode==='gift'?'gift':mode.startsWith('grocery_')?'grocery':'finished';
+ const items=[['setup','✎','Voorbereiding'],['wheel','◉','Spelrad'],['game','♫','Minigame'],['gift','🎁','Cadeautijd'],['grocery','🛒','Boodschappen'],['finished','★','Afsluiting']];
+ return `<nav class="hd-nav" aria-label="Spelavond"><div class="hd-nav-title">⌂ DASHBOARD</div><hr>
+ <div class="hd-nav-section">SPELAVOND</div>${items.map(([id,ic,l])=>`<div class="hd-nav-item ${id===phase?'active':''}"><span>${ic}</span>${l}</div>`).join('')}<hr>
+ <div class="hd-nav-section">BEHEER</div>
+ <a class="hd-nav-action" href="/screen" target="_blank" rel="noopener"><span>▣</span>TV-scherm openen</a>
+ ${mode==='wheel'?`<button class="hd-nav-action" data-act="v2_finish"><span>🏁</span>Avond afsluiten</button>`:''}
+ <button class="hd-nav-action" data-act="v2_reset"><span>↺</span>Nieuwe spelavond</button>
+ <img class="hd-props-left" src="/figma/host-props-left.png" alt=""></nav>`;}
+function hostPlayers(){const g=state.show?.game;
+ return `<aside class="hd-players"><h3>♟ SPELERS (${state.players.length})</h3>${state.players.map((p,i)=>`<div class="hd-tile"><i style="background:${PLAYER_DOTS[i]}"></i>
+  <div class="hd-tile-main"><b>${html(p.name)}</b><small>${p.joined?`📱 verbonden · ${button('v2_release_seat','Ontkoppel','link-btn',`data-value="${p.id}"`)}`:'📵 geen telefoon'}</small></div>
+  ${g?`<span class="hd-pts">${g.scores?.[p.id]??0} PT</span>`:''}</div>`).join('')}
+ <img class="hd-props-right" src="/figma/host-props-right.png" alt=""></aside>`;}
+function hostRoundHeader(){const g=state.show?.game;if(!g||state.show.mode!=='game')return '';const c=cat(g.category),r=g.current||{};
+ return `<div class="hd-round"><span class="hd-round-icon">${c.icon}</span><b>${html(c.name)}</b>${g.category!=='pong'?`<span class="hd-pill">VRAAG ${g.index+1} / ${g.total}</span>`:''}
+ ${r.deadline?`<span class="hd-clock">◴ <span data-countdown="${r.deadline}">01:00</span></span>`:''}</div>`;}
+function hostShell(content){return `<header class="hd-top"><img class="hd-canal" src="/figma/host-canal-skyline.svg" alt=""><img class="hd-head-left" src="/figma/host-header-left.png" alt="">
+ <img class="hd-head-sky" src="/figma/host-header-skyline.png" alt=""><div class="hd-brand"><b>SINTERKLAAS</b><strong>SPELSHOW</strong></div>
+ <span class="hd-code">CODE ${html(state.room)}</span><span class="hd-badge">HOST</span></header>
+ <div class="hd-grid">${hostNav()}<main class="hd-main">${hostRoundHeader()}<section class="stage">${content}</section></main>${hostPlayers()}</div>
+ <img class="hd-velvet" src="/figma/host-velvet-foreground.svg" alt="">`;}
+function shell(content,side=true){if(isHost)return hostShell(content);return `${decorate()}${header()}<main class="layout ${side?'with-sidebar':'full-stage'}"><section class="stage">${content}</section>${side?scoreboard():''}</main><footer>Een avond vol verrassingen · Alleen op jullie eigen wifi</footer>${tvJoinMini()}`;}
 const button=(act,label,cls='',attrs='')=>`<button class="btn ${cls}" data-act="${act}" ${attrs}>${label}</button>`;
 const pill=t=>`<span class="pill">${t}</span>`;
 function home(){return `<main class="entry-screen"><div class="entry-panel"><div class="big-signet">🎁</div><p class="eyebrow">Sintspel 2.0</p><h1>Welkom op de<br>pakjesavond!</h1><p>De laptop is de spelleider, de TV het speelbord en iedere speler gebruikt een telefoon.</p>
 <div class="actions"><a class="btn" href="/play">📱 Speel mee</a><a class="btn alt" href="/screen">📺 TV-scherm</a></div><p class="fine">Open de beveiligde hostlink op de laptop, of ga naar <code>127.0.0.1:8765/host</code> op de serverlaptop.</p></div></main>`;}
 function joinScreen(){return `<div class="stage-card welcome"><p class="eyebrow">📱 Meld je aan</p><h1>Wie ben jij?</h1><p>Vul de code van de TV in en kies jouw plek.</p><label>Viercijferige spelcode</label><input id="join-code" class="text-input" maxlength="4" inputmode="numeric" value="${html(new URLSearchParams(location.search).get('room')||localStorage.getItem('sintspel-room')||'')}" placeholder="1234">
-<div class="player-options">${state.players.map((p,i)=>`<button class="player-choice" data-act="join" data-player="${p.id}" ${p.joined?'disabled':''}><span>${['🎄','⭐','🎁','🔔'][i]} ${html(p.name)}</span><small>${p.joined?'Bezet':'Meedoen →'}</small></button>`).join('')}</div></div>`;}
-function setup(){const sh=state.show;
- if(isPhone){const me=sh.has_story[state.me];return `<div class="stage-card"><p class="eyebrow">✨ Voor de start</p><h1>Welkom, ${name(state.me)}</h1><p>Voer alvast een waargebeurd feitje over jezelf in dat de andere spelers vermoedelijk niet kennen.</p>
+<div class="player-options">${state.players.map((p,i)=>`<button class="player-choice" data-act="join" data-player="${p.id}" ${p.joined?'disabled':''}><span>${['👑','🎄','⭐','🔔'][i]} ${html(p.name)}</span><small>${p.joined?'Bezet':'Meedoen →'}</small></button>`).join('')}</div></div>`;}
+function storyForm(again){const me=state.show.has_story[state.me];
+ return `<div class="story-box"><h2>🕵️ ${again?'Nieuw weetje voor Wie van de 3?':'Jouw geheime weetje'}</h2><p>${again?'De vorige verhalen zijn gebruikt. Vul een nieuw waargebeurd feitje over jezelf in dat de anderen vermoedelijk niet kennen.':'Voer een waargebeurd feitje over jezelf in dat de andere spelers vermoedelijk niet kennen.'}</p>
 <div class="form-area"><textarea id="my-story" class="text-input" rows="3" placeholder="Bijvoorbeeld: Ik heb ooit..." minlength="12" maxlength="250"></textarea>${button('save_story','💾 Bewaar mijn weetje')}</div>
-<p class="subtle">${me?'✅ Je weetje is bewaard. Je kunt het nog vervangen.':'Nog geen weetje opgeslagen.'}</p><div class="waiting">⏳ De spelleider begint de spelavond.</div></div>`;}
+<p class="subtle">${me?'✅ Je weetje is bewaard. Je kunt het nog vervangen.':'Nog geen weetje opgeslagen.'}</p></div>`;}
+function hostStoryForm(){return `<p class="fine">Spelers vullen dit op hun eigen telefoon in. Je kunt het ook namens hen doen:</p>
+<select id="story-player" class="text-input">${state.players.map(p=>`<option value="${p.id}">${name(p.id)}</option>`).join('')}</select>
+<textarea id="host-story" rows="2" class="text-input" placeholder="Waargebeurd weetje..."></textarea>${button('host_story','Bewaar weetje','alt')}`;}
+function setup(){const sh=state.show;
+ if(isPhone)return `<div class="stage-card"><p class="eyebrow">✨ Voor de start</p><h1>Welkom, ${name(state.me)}</h1>${storyForm(false)}<div class="waiting">⏳ De spelleider begint de spelavond.</div></div>`;
  if(page==='screen'){
   const joinLink=state.join_url+'?room='+encodeURIComponent(state.room);
   const joinQr='/qr.png?url='+encodeURIComponent(joinLink);
@@ -77,14 +131,12 @@ function setup(){const sh=state.show;
   </div></div></div>`;
  }
  const cards=sh.hitster_cards||[];
- return `<div class="stage-card"><p class="eyebrow">🎛 Voorbereiding</p><h1>Klaar voor pakjesavond?</h1><p>Geef de vier spelers een naam en stel het aantal cadeaus per speler in.</p>
-<form id="setup-form" class="config-form">${state.players.map((p,i)=>`<div class="config-row"><label>Speler ${i+1}<input class="text-input" name="name${i}" maxlength="28" value="${html(p.name)}" required></label><label>Cadeaus<input class="text-input" name="target${i}" type="number" min="1" max="99" value="${p.target||9}" required></label></div>`).join('')}
+ return `<div class="stage-card"><p class="eyebrow">🎛 Voorbereiding</p><h1>Klaar voor pakjesavond?</h1><p>Geef de vier spelers een naam. Wie een minigame wint, mag een cadeau kiezen.</p>
+<form id="setup-form" class="config-form">${state.players.map((p,i)=>`<div class="config-row"><label>Speler ${i+1}<input class="text-input" name="name${i}" maxlength="28" value="${html(p.name)}" required></label></div>`).join('')}
 <div class="actions"><button type="submit" class="btn alt">💾 Instellingen opslaan</button>${button('v2_start','🎉 Start de spelshow','gold','type="button"')}</div></form>
 <div class="preflight"><h2>🕵️ Persoonlijke weetjes</h2><p>Voor Wie van de 3? moet iedere speler één waargebeurd weetje hebben ingevuld.</p>
 ${state.players.map(p=>`<div class="check-row"><span>${name(p.id)}</span><strong>${sh.has_story[p.id]?'✅ Ontvangen':'⏳ Nog niet ingevuld'}</strong></div>`).join('')}
-<p class="fine">Spelers vullen dit op hun eigen telefoon in. Je kunt het ook namens hen doen:</p>
-<select id="story-player" class="text-input">${state.players.map(p=>`<option value="${p.id}">${name(p.id)}</option>`).join('')}</select>
-<textarea id="host-story" rows="2" class="text-input" placeholder="Waargebeurd weetje..."></textarea>${button('host_story','Bewaar weetje','alt')}</div>
+${hostStoryForm()}</div>
 <div class="preflight"><h2>🎵 Muziekbibliotheek</h2><p>${sh.hitster_count} kaarten beschikbaar. De QR-codes blijven bruikbaar in deze nieuwe versie.</p>
 <form id="csv-import"><label>CSV met URL, artiest, titel, jaar<input id="csv-file" class="text-input" type="file" accept=".csv,.txt,text/csv" required></label><button class="btn alt" type="submit">📥 Importeer kaarten</button></form>
 ${importNotice?`<div class="message">${html(importNotice)}</div>`:''}
@@ -98,12 +150,15 @@ function wheel(){const sh=state.show,spinning=sh.mode==='spinning',bag=spinning&
  const opts=bag.map((id,i)=>`<div class="wheel-label" style="--pos:${i};--total:${bag.length}">${cat(id).icon}<small>${html(cat(id).name)}</small></div>`).join('');
  return `<div class="stage-card wheel-stage"><p class="eyebrow">🎡 ${sh.regular_completed+1}e minigame</p><h1>${spinning?'Welk spel wordt het?':'Draai aan het rad!'}</h1>
  ${bag.length?`<div class="wheel-wrap"><div class="wheel-pointer"></div><div class="wheel-disc ${spinning?'spinning':''}" style="background:conic-gradient(${grad});--segments:${bag.length};--wheel-target:${stopAngle}deg">${opts}<div class="wheel-hub">🎁</div></div></div>`:'<div class="waiting">Alle spellen zijn uitgeschakeld. De spelleider kan er hieronder één opnieuw inschakelen.</div>'}
- ${spinning?`<h2 class="result-banner wheel-result-pending">${cat(sh.spin.category).icon} ${html(cat(sh.spin.category).name)}</h2>`:`<p class="subtle">Iedere minigame verdwijnt na het spelen van het rad, tot alle zeven gespeeld zijn.</p><p class="wheel-turn">🎡 <strong>${spinnerName}</strong> is aan de beurt om te draaien.</p>`}
+ ${spinning?`<h2 class="result-banner wheel-result-pending">${cat(sh.spin.category).icon} ${html(cat(sh.spin.category).name)}</h2>`:`<p class="subtle">Iedere minigame verdwijnt na het spelen van het rad, tot alle ${sh.enabled_games.length} spellen geweest zijn.</p><p class="wheel-turn">🎡 <strong>${spinnerName}</strong> is aan de beurt om te draaien.</p>`}
+ ${isPhone&&!spinning&&sh.stories_needed&&!sh.has_story[state.me]?storyForm(sh.stories_used):''}
+ ${!isPhone&&!spinning&&sh.stories_needed?`<div class="message">🕵️ Wie van de 3? wacht op ${sh.stories_used?'nieuwe ':''}weetjes van: ${state.players.filter(p=>!sh.has_story[p.id]).map(p=>html(p.name)).join(', ')}. Tot die er zijn, slaat het rad dit spel over.</div>${isHost?`<details class="game-manager"><summary>✍ Weetje invoeren namens een speler</summary>${hostStoryForm()}</details>`:''}`:''}
  ${isPhone?(spinning?'<p class="waiting">Het rad draait! Kijk naar de TV.</p>':bag.length===0?'<p class="waiting">De spelleider schakelt een spel in…</p>':state.me===spinner?button('v2_spin','🎡 Geef het rad een slinger!','gold wheel-phone-spin'):`<p class="waiting">Wacht op ${spinnerName}…</p>`):''}
  ${isHost?(spinning?button('v2_open_game','✨ Start het gekozen spel','gold'):bag.length?button('v2_spin',`🎡 Draai namens ${spinnerName}`,'gold'):''):''}
  ${isHost&&!spinning?`<div class="test-picker"><span>Rechtstreeks testen:</span><select id="quick-game" class="text-input">${bag.map(id=>`<option value="${id}">${cat(id).icon} ${html(cat(id).name)}</option>`).join('')}</select>${bag.length?button('v2_direct','Start gekozen spel','alt'):''}</div>`:''}
  ${isHost&&!spinning?`<details class="game-manager"><summary>⚙ Spellen beheren (bij problemen)</summary>
  ${sh.enabled_games.length?`<div class="game-management-row"><select id="disable-select" class="text-input">${sh.enabled_games.map(id=>`<option value="${id}">${cat(id).name}</option>`).join('')}</select>${button('v2_disable_game','⛔ Uit het rad halen','soft-btn')}</div>`:''}
+ <div class="game-management-row">${button('v2_finish','🏁 Spelavond afsluiten','soft-btn')}</div>
  ${sh.disabled_games?.length?`<div class="game-management-row"><select id="enable-select" class="text-input">${sh.disabled_games.map(id=>`<option value="${id}">${cat(id).name}</option>`).join('')}</select>${button('v2_enable_game','↶ Opnieuw inschakelen','alt')}</div>`:'<p class="subtle">Alle spellen zijn momenteel ingeschakeld.</p>'}</details>`:''}
  </div>`;}
 function topGame(g){return `<div class="game-head"><p class="eyebrow">${cat(g.category).icon} ${html(cat(g.category).name)}</p>${pill('Vraag '+(g.index+1)+' / '+g.total)}${pill(g.phase==='review'?'Einduitslag':g.phase==='reveal'?'Antwoord':'Speelronde')}</div>`;}
@@ -129,8 +184,13 @@ function chooseScreen(g){const r=round(),mine=state.me===r.chooser;
  ${isHost||mine?`<div class="choice-grid">${choices.map(c=>`<button class="big-choice" data-act="v2_choose" data-value="${c.v}"><strong>${c.label}</strong><small>${c.sub}</small></button>`).join('')}</div>`:`<div class="waiting">⏳ ${name(r.chooser)} is aan het kiezen…</div>`}
  ${isHost?button('v2_cancel','↩ Annuleer minigame','soft-btn'):''}</div>`;}
 function quizPrompt(r){const t=r.question_type;return t==='boundary'?`Is dit nummer uitgebracht vóór ${r.boundary}, of vanaf ${r.boundary}?`:({artist:'Wie is de artiest?',title:'Wat is de titel?',year5:'In welk jaar is het uitgebracht? (±5 jaar)',year3:'In welk jaar is het uitgebracht? (±3 jaar)'})[t];}
-function cardName(c){if(!c)return '?';const v=c.v===14?'A':c.v===13?'K':c.v===12?'Q':c.v===11?'J':String(c.v);return `<span class="${'HD'.includes(c.s)?'red-suit':'dark-suit'}">${v}${{H:'♥',D:'♦',C:'♣',S:'♠'}[c.s]}</span>`;}
-function faceDownCards(r){return `<div class="playing-cards">${[0,1,2,3].map(i=>`<div class="playing-card ${r.cards[i]?'is-up':''}" style="animation-delay:${i*.09}s"><div class="playing-inner"><div class="playing-back">🎁<small>SINTSPEL</small></div><div class="playing-face">${cardName(r.cards[i])}</div></div></div>`).join('')}</div>`;}
+const SUIT_NAMES={H:'harten',D:'ruiten',C:'klaveren',S:'schoppen'};
+function cardLabel(c){const v={14:'aas',13:'heer',12:'vrouw',11:'boer'}[c.v]||String(c.v);return `${SUIT_NAMES[c.s]} ${v}`;}
+// cards.svg (Figma): 9 columns × 6 rows; rows run ♠ A–K, ♥ A–K, ♣ A–K, ♦ A–K, then jokers (never used).
+function cardFace(c){if(!c)return '';const idx='SHCD'.indexOf(c.s)*13+(c.v===14?0:c.v-1);
+ return `<div class="playing-face" role="img" aria-label="${cardLabel(c)}" style="--col:${idx%9};--row:${Math.floor(idx/9)}"><img class="deck" src="/cards.svg?v=2" alt=""></div>`;}
+function faceDownCards(r){return `<div class="playing-cards">${[0,1,2,3].map(i=>`<div class="playing-card ${r.cards[i]?'is-up':''}" style="animation-delay:${i*.09}s"><div class="playing-inner"><div class="playing-back" role="img" aria-label="Gesloten kaart"></div>${cardFace(r.cards[i])}</div></div>`).join('')}</div>`;}
+const CARD_ANSWERS={red:'Rood',black:'Zwart',higher:'Hoger',lower:'Lager',inside:'Binnen',outside:'Buiten',H:'Harten',D:'Ruiten',C:'Klaveren',S:'Schoppen'};
 function stageHint(stage){return ['Rood of zwart?','Is kaart 2 hoger of lager dan kaart 1?','Valt kaart 3 binnen of buiten de eerdere twee waarden?','Welke kaartsoort heeft kaart 4?'][stage];}
 function visibleQuestion(g){const r=round(),catid=g.category;
  if(catid==='classic')return `<h1>Links, midden of rechts?</h1><p>Waar hoort het verborgen nummer in de chronologische volgorde?</p><div class="step-points">${['easy','medium','hard'].includes(r.level)?`<b>${{easy:'Makkelijk · 1 punt',medium:'Gemiddeld · 2 punten',hard:'Moeilijk · 4 punten'}[r.level]}</b>`:''}</div>${cardsRow(r,g.phase)}`;
@@ -143,15 +203,20 @@ function visibleQuestion(g){const r=round(),catid=g.category;
  if(catid==='cards')return `<h1>${html(stageHint(r.stage))}</h1>${faceDownCards(r)}<div class="alive-pills">${r.alive.map(p=>pill('✓ '+name(p))).join('')}${state.players.filter(p=>!r.alive.includes(p.id)).map(p=>pill('✕ '+name(p.id))).join('')}</div>`;
  if(catid==='taboo')return `<h1>Verboden woord</h1><p><strong>${name(r.performer)}</strong> omschrijft het woord. De anderen typen hun gok op hun telefoon.</p>
  <div class="timer-hero"><span data-countdown="${r.deadline||''}" data-prefix="" >${r.deadline?'01:00':'Klaar voor de start?'}</span></div>
- ${g.phase==='reveal'?`<h2 class="answer-reveal">${html(r.word||'')}</h2>`:''}`;
+ ${g.phase==='reveal'?`<h2 class="answer-reveal">${html(r.word||'')}</h2>`:isHost?hostWordPeek(g,r):''}`;
  return '<h1>De volgende opdracht komt eraan</h1>';
 }
-function answersCount(g){const r=round();return g.category==='taboo'?`${Object.values(r.all_attempts||{}).reduce((t,v)=>t+v.length,0)} pogingen`:
+// The host plays along: the secret word stays hidden unless deliberately revealed
+// (for instance when the describer's phone is unavailable).
+function hostWordPeek(g,r){const marker=`${g.index}`;const open=revealedWord===marker;
+ return `<div class="word-peek">${open?`<div class="secret-word">${html(r.word||'')}</div><div class="banned-words">${(r.banned||[]).map(w=>pill(html(w))).join('')}</div>`:''}
+ <button type="button" class="btn soft-btn" data-peek="${marker}" aria-pressed="${open}">${open?'🙈 Verberg het woord':'👁 Toon woord (alleen spelleider)'}</button></div>`;}
+function answersCount(g){const r=round();if(g.category==='three')return '';return g.category==='taboo'?`${r.attempt_count||0} pogingen`:
  g.category==='quiplash'&&g.phase==='vote'?`${r.voted?.length||0} van 4 stemmen`:
  g.category==='cards'?`${r.submitted.filter(p=>r.alive.includes(p)).length} van ${r.alive.length} antwoorden`:`${r.submitted.length} van 4 antwoorden`;}
 function revealPanel(g){const r=round(),catid=g.category;
  if(catid==='three')return `<div class="reveal-box"><h2>${r.guess_skipped?'Onderzoek overgeslagen':'Verdachte aangewezen!'}</h2><p>${r.guess_skipped?'Geen antwoord: niemand krijgt punten.':'De identiteit wordt pas na alle vier de onderzoeken onthuld.'}</p></div>`;
- if(catid==='cards')return `<div class="reveal-box"><h2>${r.deal_finished?'Duel afgelopen!':'Kaart omgedraaid!'}</h2><p>${r.stage_result?'Juiste antwoord: '+html(r.stage_result.correct):''}</p>${r.deal_winners?.length?`<strong>${r.deal_winners.map(name).join(' & ')} krijgen 1 punt.</strong>`:r.deal_finished?'<p>Geen geldige winnaar deze ronde.</p>':''}</div>`;
+ if(catid==='cards')return `<div class="reveal-box"><h2>${r.deal_finished?'Duel afgelopen!':'Kaart omgedraaid!'}</h2><p>${r.stage_result?'Juiste antwoord: <b>'+html(CARD_ANSWERS[r.stage_result.correct]||r.stage_result.correct)+'</b>':''}</p>${r.deal_winners?.length?`<strong>${r.deal_winners.map(name).join(' & ')} krijgen 1 punt.</strong>`:r.deal_finished?'<p>Geen geldige winnaar deze ronde.</p>':''}</div>`;
  if(catid==='quiplash')return `<div class="reveal-box"><h2>De stemmen zijn geteld!</h2><p>Meeste stemmen = één punt, bij gelijkstand ieder één punt.</p></div>`;
  if(catid==='dice')return `<div class="reveal-box"><h2>De dobbelstenen zijn geteld!</h2><p>Yahtzee-bonussen staan los van de gewone opdracht.</p></div>`;
  return `<div class="reveal-box"><h2>Het antwoord is bekend!</h2>${r.song?`<p><strong>${html(r.song.artist)} — ${html(r.song.title)} (${r.song.year})</strong></p>`:''}${r.word?`<p>${html(r.word)}</p>`:''}</div>`;
@@ -206,7 +271,15 @@ function phoneGame(g){const r=round(),cid=g.category;
  }
  return `<div class="stage-card phone-stage">${topGame(g)}<h1>${cat(cid).name}</h1>${content}</div>`;
 }
+function pongScreen(g){const r=round(),order=r.order||[];
+ const list=`<ol class="pong-order">${order.map((pid,i)=>`<li><span>${i+1}</span>${name(pid)}</li>`).join('')}</ol>`;
+ const head=`<p class="eyebrow">🍪 Intermezzo</p><h1>Pepernotenpong!</h1>`;
+ const rules=`<p class="pong-rules">Om de beurt gooit iedereen <b>${r.throws} pepernoten</b> naar de bekertjes, in deze volgorde. <b>Raak?</b> Til het bekertje op: het cadeautje eronder is voor jou.</p>`;
+ if(isPhone)return `<div class="stage-card phone-stage pong-stage">${head}${rules}${list}<div class="waiting">Kijk naar de TV en gooi als je aan de beurt bent.</div></div>`;
+ return `<div class="stage-card pong-stage">${head}${rules}${list}
+ ${isHost?`<div class="host-controls">${button('v2_pong_finish','✓ Klaar · terug naar het rad','gold')}${button('v2_cancel','↩ Annuleer','soft-btn')}</div>`:''}</div>`;}
 function gameScreen(){const g=game();if(!g)return `<div class="stage-card">Spel wordt gestart…</div>`;
+ if(g.category==='pong')return pongScreen(g);
  if(isPhone)return phoneGame(g);
  if(g.phase==='choose')return chooseScreen(g);
  if(g.phase==='review')return reviewScreen(g);
@@ -214,27 +287,36 @@ function gameScreen(){const g=game();if(!g)return `<div class="stage-card">Spel 
  ${g.phase==='reveal'?revealPanel(g):`<div class="submit-count">${answersCount(g)}</div>`}
  ${currentScoreboard(g)}${hostRoundControls(g)}</div>`;
 }
-function reviewScreen(g){const scores=Object.entries(g.scores).sort((a,b)=>b[1]-a[1]),top=scores[0]?.[1]||0,winners=scores.filter(x=>x[1]===top).map(x=>x[0]);
+function threeOwners(g){if(g.category!=='three')return '';
+ return `<div class="owner-reveal"><h2>🕵️ Van wie waren de verhalen?</h2>${(g.rounds||[]).map(r=>`<div class="owner-row"><blockquote>“${html(r.story)}”</blockquote><p>Van <b>${name(r.owner)}</b> · ${name(r.investigator)} ${r.guess?`wees ${name(r.guess)} aan ${r.guess===r.owner?'✅':'❌'}`:'koos niemand'}</p></div>`).join('')}</div>`;}
+function reviewScreen(g){const scores=Object.entries(g.scores).sort((a,b)=>b[1]-a[1]),top=scores[0]?.[1]||0,winners=top>0?scores.filter(x=>x[1]===top).map(x=>x[0]):[];
  const revisions=isHost?(g.rounds||[]).map((r,i)=>{
    if(!r.grades||!['classic','quiz','taboo'].includes(g.category))return '';
    return `<details class="review-round"><summary>Vraag ${i+1}: ${g.category==='quiz'?html(r.song?.title||''):g.category==='taboo'?html(r.word||''):html(r.song?.title||'')}</summary>
    ${Object.entries(r.grades).map(([pid,grade])=>`<div class="review-row"><span><strong>${name(pid)}:</strong> ${html(grade.guess||grade.all_attempts?.join(', ')||'—')}</span><b class="${grade.accepted?'ok':'no'}">${grade.accepted?'Goed':'Fout'}</b>${button('v2_override',grade.accepted?'↩ Afkeuren':'✓ Goedkeuren',grade.accepted?'soft-btn':'alt',`data-round="${i}" data-player="${pid}" data-accepted="${grade.accepted?'false':'true'}"`)}</div>`).join('')}</details>`;
  }).join(''):'';
- return `<div class="stage-card review"><p class="eyebrow">🏆 Einduitslag · ${html(cat(g.category).name)}</p><h1>${winners.length>1?'Meerdere winnaars!':'De winnaar is bekend!'}</h1><div class="winners">${winners.map(id=>`<div class="winner"><span>🏆</span><strong>${name(id)}</strong><small>${top} punten</small></div>`).join('')}</div>
+ return `<div class="stage-card review"><p class="eyebrow">🏆 Einduitslag · ${html(cat(g.category).name)}</p><h1>${!winners.length?'Geen winnaar deze keer':winners.length>1?'Meerdere winnaars!':'De winnaar is bekend!'}</h1>${winners.length?`<div class="winners">${winners.map(id=>`<div class="winner"><span>🏆</span><strong>${name(id)}</strong><small>${top} punten</small></div>`).join('')}</div><p class="subtle">${winners.map(id=>name(id)).join(' &amp; ')} ${winners.length>1?'mogen':'mag'} een cadeau kiezen.</p>`:'<p class="subtle">Niemand heeft punten gescoord, dus deze keer geen cadeau.</p>'}
+ ${threeOwners(g)}
  <div class="score-table">${scores.map(([pid,n])=>`<div class="score-line"><span>${name(pid)}</span><b>${n} punten</b></div>`).join('')}</div>
- ${isHost?`<div class="host-review"><h2>Antwoorden controleren</h2><p class="subtle">Fout gerekende antwoorden kun je alsnog goedkeuren. Ook een correctie ongedaan maken kan vóór de cadeau-uitdeling.</p>${revisions||'<p>Geen handmatige tekstbeoordeling nodig.</p>'}${button('v2_confirm','✓ Uitslag bevestigen · cadeaus','gold')}</div>`:'<p class="subtle">De spelleider controleert de antwoorden voordat de cadeaus worden uitgedeeld.</p>'}</div>`;
+ ${isHost?`<div class="host-review"><h2>Antwoorden controleren</h2><p class="subtle">Fout gerekende antwoorden kun je hier alsnog goedkeuren (of weer afkeuren).</p>${revisions||'<p>Geen handmatige tekstbeoordeling nodig.</p>'}${button('v2_confirm',winners.length?'✓ Uitslag bevestigen · cadeaus':'✓ Uitslag bevestigen · terug naar het rad','gold')}</div>`:'<p class="subtle">De spelleider bevestigt zo de uitslag.</p>'}</div>`;
 }
-function giftScreen(){const sh=state.show,g=sh.gift,need=g?.requirement;if(!g||!need)return `<div class="stage-card">Cadeaus worden klaargemaakt…</div>`;
- const self=need.kind==='self';return `<div class="stage-card gift-stage"><p class="eyebrow">🎁 Tijd om uit te pakken</p><h1>${g.winners.length>1?'De winnaars pakken uit!':'Hoera, een winnaar!'}</h1><div class="prize-icons"><span>🎁</span><span>🎁</span></div>
- <div class="winner-display">${name(need.winner)} kiest cadeau ${g.choice_index+1} van 2</div>
- <h2>${self?'Eén cadeau voor jezelf':need.kind==='other'?'Kies een cadeau voor een ander':'Laatste beschikbare cadeaus'}</h2>
- ${self?`<p>Voor ${name(need.winner)}.</p>`:`<p>Kies iemand van wie nog cadeaus in de zak zitten. De eerlijkste ontvangers staan hieronder.</p>`}
- <div class="choice-grid">${need.eligible.map(pid=>isHost?`<button class="gift-choice" data-act="v2_give" data-value="${pid}">🎁 ${name(pid)}<small>${pl(pid)?.received}/${pl(pid)?.target} ontvangen</small></button>`:`<div class="gift-choice">🎁 ${name(pid)}<small>${pl(pid)?.received}/${pl(pid)?.target} ontvangen</small></div>`).join('')}</div>
- <div class="prize-footer">${g.awarded.length} cadeau${g.awarded.length===1?'':'s'} deze minigame uitgedeeld · ${sh.remaining_gifts} cadeaus over</div>
- ${isHost?button('v2_undo_gift','↩ Laatste cadeau terugdraaien','soft-btn'):''}</div>`;}
+function giftScreen(){const g=state.show.gift;if(!g)return `<div class="stage-card">Even geduld…</div>`;
+ const many=g.winners.length>1;
+ return `<div class="stage-card gift-stage"><p class="eyebrow">🎁 Cadeautijd</p><h1>Cadeautijd!</h1><div class="prize-icons"><span>🎁</span></div>
+ <div class="gift-winners">${g.winners.map(pid=>`<div class="winner-display">${name(pid)}</div>`).join('')}</div>
+ <p>${many?'mogen':'mag'} een cadeau kiezen.</p>
+ ${isHost?button('v2_gift_done','Verder →','gold'):''}</div>`;}
+const alarmSvg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18v-6a5 5 0 0 1 10 0v6"/><path d="M5 21h14"/><path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="M2 12h2"/><path d="m19.07 4.93-1.41 1.41"/><path d="M20 12h2"/><path d="M4 18h16"/></svg>';
 function groceryScreen(){const gr=state.show.grocery,mode=state.show.mode;
- if(mode==='grocery_alarm')return `<div class="alarm-screen"><div class="alarm-siren">🚨</div><p class="eyebrow">ONVERWACHTE ONDERBREKING</p><h1>ALARM!</h1><h2>${gr.phase==='alarm_intro'?'ONTHOUD DE BOODSCHAPPEN!':'WAT STOND ER OP DE LIJST?'}</h2>
- <p>De spelshow wordt even onderbroken…</p>${isHost?button('v2_grocery_show','▶ Start de verrassing','alarm-btn'):''}</div>`;
+ if(mode==='grocery_alarm')return `<div class="alarm-screen" role="alert">
+  <span class="alarm-beacon alarm-beacon-left" aria-hidden="true">${alarmSvg}</span>
+  <span class="alarm-beacon alarm-beacon-right" aria-hidden="true">${alarmSvg}</span>
+  <div class="alarm-copy"><p class="eyebrow">ONVERWACHTE ONDERBREKING</p>
+  <h1>ALARM!</h1>
+  <h2>${gr.phase==='alarm_intro'?'ONTHOUD DE BOODSCHAPPEN!':'WAT STOND ER OP DE LIJST?'}</h2>
+  <p>De spelshow wordt even onderbroken…</p>
+  ${isHost?button('v2_grocery_show','▶ Start de verrassing','alarm-btn'):''}
+</div></div>`;
  if(mode==='grocery_study')return `<div class="stage-card groceries"><p class="eyebrow">🛒 Onthoud de boodschappen</p><h1>20 boodschappen · 60 seconden</h1>
  ${isPhone?'<div class="waiting">👀 Kijk naar de televisie en probeer alle boodschappen te onthouden.</div>':`<div class="grocery-list">${(gr.items||[]).map((x,i)=>`<div><span>${i+1}.</span>${html(x)}</div>`).join('')}</div>`}
  <div class="timer-hero"><span data-countdown="${gr.deadline}">01:00</span></div>${isHost?button('v2_grocery_close','Verder naar het rad →','alt','data-after-timer="true"'):''}</div>`;
@@ -243,40 +325,44 @@ function groceryScreen(){const gr=state.show.grocery,mode=state.show.mode;
  ${isHost?button('v2_grocery_close','✅ Naar de uitslag','gold'):''}</div>`;
  if(mode==='grocery_review'){
   const review=gr.review||{};const rows=Object.entries(review).sort((a,b)=>b[1].score-a[1].score);
-  const best=rows[0]?.[1]?.score||0;
-  return `<div class="stage-card review"><p class="eyebrow">🛒 De boodschappen zijn geteld</p><h1>Wie onthield de meeste?</h1><div class="score-table">${rows.map(([pid,v])=>`<div class="score-line"><span>${name(pid)}</span><b>${v.score} punten ${v.score===best?'🏆':''}</b></div>`).join('')}</div>
+  const best=rows[0]?.[1]?.score||0,trophy=v=>best>0&&v.score===best?'🏆':'';
+  return `<div class="stage-card review"><p class="eyebrow">🛒 De boodschappen zijn geteld</p><h1>Wie onthield de meeste?</h1><div class="score-table">${rows.map(([pid,v])=>`<div class="score-line"><span>${name(pid)}</span><b>${v.score} punten ${trophy(v)}</b></div>`).join('')}</div>
  ${!isPhone?`<div class="grocery-list compact">${(gr.items||[]).map((x,i)=>`<div><span>${i+1}.</span>${html(x)}</div>`).join('')}</div>`:''}
- ${isHost?`<div class="host-review"><h2>Controleer de antwoorden</h2>${rows.map(([pid,v])=>`<h3>${name(pid)}</h3>${v.answers.map(a=>`<div class="review-row"><span>${html(a.text)}</span><b class="${a.accepted?'ok':'no'}">${a.accepted?'Goed':'Fout'}</b>${button('v2_grocery_override',a.accepted?'↩ Afkeuren':'✓ Goedkeuren',a.accepted?'soft-btn':'alt',`data-player="${pid}" data-guess="${encodeURIComponent(a.text)}" data-accepted="${a.accepted?'false':'true'}"`)}</div>`).join('')}`).join('')}${button('v2_grocery_confirm','✓ Uitslag bevestigen · cadeaus','gold')}</div>`:''}</div>`;
+ ${isHost?`<div class="host-review"><h2>Controleer de antwoorden</h2>${rows.map(([pid,v])=>`<h3>${name(pid)}</h3>${v.answers.map(a=>`<div class="review-row"><span>${html(a.text)}</span><b class="${a.accepted?'ok':'no'}">${a.accepted?'Goed':'Fout'}</b>${button('v2_grocery_override',a.accepted?'↩ Afkeuren':'✓ Goedkeuren',a.accepted?'soft-btn':'alt',`data-player="${pid}" data-guess="${encodeURIComponent(a.text)}" data-accepted="${a.accepted?'false':'true'}"`)}</div>`).join('')}`).join('')}${button('v2_grocery_confirm',best>0?'✓ Uitslag bevestigen · cadeau kiezen':'✓ Uitslag bevestigen · geen winnaar','gold')}</div>`:''}</div>`;
  }
  return '<div class="stage-card"><h1>Het boodschappenspel</h1></div>';
 }
-function finished(){return `<div class="stage-card final"><p class="eyebrow">✨ De cadeauzak is leeg</p><div class="final-icon">🎁🎉🎄</div><h1>Fijne pakjesavond!</h1><p>${state.show.gifts_given} cadeaus uitgedeeld, ${state.show.regular_completed} reguliere minigames gespeeld.</p>
- <div class="score-table">${state.players.map(p=>`<div class="score-line"><span>${html(p.name)}</span><b>${p.received} cadeaus · ${p.wins} gewonnen</b></div>`).join('')}</div>${isHost?button('v2_reset','↺ Een nieuwe spelavond','alt'):''}</div>`;}
+function finished(){return `<div class="stage-card final"><p class="eyebrow">✨ Einde van de spelshow</p><div class="final-icon">🎁🎉🎄</div><h1>Fijne pakjesavond!</h1><p>${state.show.regular_completed} minigames gespeeld. Bedankt voor het meespelen!</p>
+ ${isHost?`<div class="actions">${button('v2_resume','↶ Toch verder spelen','alt')}${button('v2_reset','↺ Een nieuwe spelavond','soft-btn')}</div>`:''}</div>`;}
 function unauthorized(){return `<div class="stage-card"><h1>🔒 Spelleiderlink ontbreekt</h1><p>De hostpagina is geopend zonder de geldige toegangssleutel.</p><p>Open op de laptop de volledige hostlink in het venster van start.bat, of gebruik <a href="http://127.0.0.1:${location.port||'8765'}/host">de lokale hostlink</a>.</p></div>`;}
 function viewScreen(){if(page==='home')return home();if(!state)return '<div class="loading">Verbinding maken…</div>';
  if(isHost&&!state.host_authorized)return shell(unauthorized());
  if(isPhone&&!state.me)return shell(joinScreen(),false);
- const mode=state.show?.mode||'setup';let content='';
+ if(page==='screen')return tvScreen();  // TV: Figma design (tv.js)
+ const mode=state.show?.mode||'setup';
+ return shell(legacyContent(),!isPhone && mode!=='grocery_alarm' && mode!=='grocery_study');}
+function legacyContent(){const mode=state.show?.mode||'setup';let content='';
  if(mode==='setup')content=setup();
  else if(mode==='wheel'||mode==='spinning')content=wheel();
  else if(mode==='game')content=gameScreen();
  else if(mode==='gift')content=giftScreen();
  else if(mode.startsWith('grocery_'))content=groceryScreen();
  else content=finished();
- return shell(content,!isPhone && mode!=='grocery_alarm' && mode!=='grocery_study');}
+ return content;}
 function renderHash(){const s=state,sh=s?.show,g=sh?.game,r=g?.current;
  if(!sh)return 'none';
- if(isPhone)return JSON.stringify([sh.mode,sh.spin_player,sh.enabled_games,sh.disabled_games,sh.gifts_given,g?.category,g?.phase,g?.index,r?.stage,r?.my_answer,r?.my_vote,r?.my_attempts?.length,r?.deadline,r?.chooser,r?.investigator,r?.guess,sh.grocery?.phase,sh.grocery?.my_response?.length,s?.me]);
- return JSON.stringify([sh.mode,sh.spin_player,sh.enabled_games,sh.disabled_games,sh.gifts_given,sh.bag,sh.regular_completed,g?.category,g?.phase,g?.index,g?.scores,r?.stage,r?.submitted,r?.voted,r?.deadline,r?.revealed,r?.all_answers,r?.all_attempts,sh.grocery?.phase,sh.grocery?.responses_count,sh.gift?.winner_index,sh.gift?.choice_index,s?.players.map(p=>p.received),sh.hitster_count,sh.has_story]);
+ const seats=s?.players?.map(p=>[p.name,p.joined]);
+ if(isPhone)return JSON.stringify([sh.mode,sh.spin_player,sh.enabled_games,sh.disabled_games,sh.gift,g?.category,g?.phase,g?.index,r?.stage,r?.my_answer,r?.my_vote,r?.my_attempts?.length,r?.deadline,r?.chooser,r?.investigator,r?.guess,sh.grocery?.phase,sh.grocery?.my_response?.length,s?.me,s?.me?null:seats,sh.has_story?.[s?.me],sh.stories_needed]);
+ return JSON.stringify([sh.mode,sh.spin_player,sh.enabled_games,sh.disabled_games,sh.gift,sh.bag,sh.regular_completed,g?.category,g?.phase,g?.index,g?.scores,r?.stage,r?.submitted,r?.voted,r?.deadline,r?.revealed,r?.all_answers,r?.all_attempts,r?.attempt_count,r?.questions_used,sh.grocery?.phase,sh.grocery?.responses_count,sh.grocery?.review,seats,sh.hitster_count,sh.has_story,sh.stories_needed,revealedWord]);
 }
 function setCountdowns(){document.querySelectorAll('[data-countdown]').forEach(el=>{
  const deadline=Number(el.dataset.countdown);if(!deadline)return;
- const seconds=Math.max(0,Math.ceil(deadline-Date.now()/1000));
+ const seconds=Math.max(0,Math.ceil(deadline-serverNow()));
  el.textContent=`${Math.floor(seconds/60).toString().padStart(2,'0')}:${(seconds%60).toString().padStart(2,'0')}`;
  if(!seconds)el.classList.add('expired');
  });document.querySelectorAll('[data-after-timer]').forEach(b=>{
  const deadline=state?.show?.grocery?.deadline;
- if(deadline)b.disabled=Date.now()/1000<deadline;
+ if(deadline)b.disabled=serverNow()<deadline;
  });}
 function animateClassic(){const el=$('[data-classic="reveal"]');if(!el)return;
  const place=el.dataset.place;
@@ -287,7 +373,7 @@ function animateClassic(){const el=$('[data-classic="reveal"]');if(!el)return;
  requestAnimationFrame(()=>requestAnimationFrame(()=>{cols.forEach((c,i)=>c.style.setProperty('--slot',map[i]));
   setTimeout(()=>flip?.classList.add('revealed'),380);}));
 }
-function afterRender(){setCountdowns();if(state?.show?.mode==='game'&&game()?.phase==='reveal'&&game()?.category==='classic'){
+function afterRender(){setCountdowns();if(page==='screen'){tvAfterRender();return;}if(state?.show?.mode==='game'&&game()?.phase==='reveal'&&game()?.category==='classic'){
  const marker=`${game().category}-${game().index}-${game().phase}`;
  if(lastReveal!==marker){lastReveal=marker;animateClassic();}}
  if(isPhone && game()?.category==='quiz' && game()?.phase==='answer')initSuggestions();
@@ -298,15 +384,31 @@ function initSuggestions(){const input=$('#quiz-text'),box=$('#suggestions');if(
  input.oninput=()=>{const q=normalizeSearch(input.value);if(q.length<3){box.innerHTML='';return;}
  const matching=source.filter(x=>normalizeSearch(x).includes(q)).slice(0,5);
  box.innerHTML=matching.map(x=>`<button type="button" class="suggestion" data-suggest="${html(x)}">${html(x)}</button>`).join('');};}
+// Unsaved typing survives the periodic re-render (e.g. when a phone saves a story).
+const drafts={};
+const draftKey=el=>el.id||el.name||'';
+document.addEventListener('input',e=>{const el=e.target;if(!el.matches?.('input:not([type=file]),textarea,select'))return;const k=draftKey(el);if(k)drafts[k]=el.value;});
+document.addEventListener('change',e=>{const el=e.target;if(el.matches?.('select')){const k=draftKey(el);if(k)drafts[k]=el.value;}});
+const DRAFT_FIELDS={save_story:['my-story'],host_story:['host-story'],send_quip:['quippy'],send_guess:['guess'],
+ send_quiz:['quiz-text','quiz-year'],send_groceries:['groceries-answer'],v2_start:['name0','name1','name2','name3']};
+function clearDrafts(action){(DRAFT_FIELDS[action]||[]).forEach(k=>delete drafts[k]);}
+function renderApp(){const active=document.activeElement,activeKey=active&&$('#app').contains(active)?draftKey(active):'';
+ const caret=activeKey&&typeof active.selectionStart==='number'?[active.selectionStart,active.selectionEnd]:null;
+ $('#app').innerHTML=viewScreen();
+ Object.entries(drafts).forEach(([k,v])=>{const el=document.getElementById(k)||document.querySelector(`#app [name="${CSS.escape(k)}"]`);if(el&&el.type!=='file')el.value=v;});
+ if(activeKey){const el=document.getElementById(activeKey)||document.querySelector(`#app [name="${CSS.escape(activeKey)}"]`);if(el){el.focus();if(caret)try{el.setSelectionRange(...caret)}catch(_){}}}
+ afterRender();}
 let refreshing=false;
 async function refresh(force=false){if(refreshing)return;refreshing=true;
  try{const params=new URLSearchParams();if(isHost)params.set('key',key);if(isPhone&&token)params.set('token',token);
   const response=await fetch('/api/state?'+params,{cache:'no-store'});
   if(!response.ok)throw Error('Server niet bereikbaar');
-  const prev=state?.show?.mode;state=await response.json();
-  const h=renderHash();if(force||h!==lastRender){lastRender=h;$('#app').innerHTML=viewScreen();afterRender();}
-  if(state.show?.mode==='grocery_alarm'&&prev!=='grocery_alarm')sound();
-  if(state.show?.mode==='spinning'&&isHost && !spinHandle){spinHandle=setTimeout(async()=>{spinHandle=null;try{await host('v2_open_game');await refresh(true);}catch(e){toast(e.message)}},6500);}
+  state=await response.json();
+  if(state.show?.server_time)clockOffset=state.show.server_time-Date.now()/1000;
+  const fileChosen=$('#csv-file')?.files?.length>0;  // a chosen file cannot be restored after re-render
+  const h=renderHash();if(force||(h!==lastRender&&!fileChosen)){lastRender=h;renderApp();}
+  if(page==='screen'){if(state.show?.mode==='grocery_alarm')sound();else stopAlarmSound();}
+  if(state.show?.mode==='spinning'&&isHost && !spinHandle){spinHandle=setTimeout(async()=>{spinHandle=null;try{await host('v2_open_game');await refresh(true);}catch(e){toast(e.message)}},8500);}
   if(state.show?.mode!=='spinning'&&spinHandle){clearTimeout(spinHandle);spinHandle=null;}
   setCountdowns();
  }catch(e){
@@ -341,13 +443,19 @@ async function act(b){if(busy)return;const action=b.dataset.act;busy=true;b.disa
    const v=await request('/api/claim',{room:code,player:b.dataset.player,token});
    token=v.token;localStorage.setItem(tokenKey,token);localStorage.setItem('sintspel-room',code);
   }else if(action==='v2_reset'){
-   if(prompt('Dit wist de spelstand, maar bewaart de muziekbibliotheek en weetjes. Typ RESET:')!=='RESET')return;
+   if(prompt('Nieuwe spelavond: dit wist de voortgang, weetjes en telefoonkoppelingen. Namen en de muziekbibliotheek blijven bewaard. Typ RESET:')!=='RESET')return;
    await host(action,{confirmation:'RESET'});
   }else if(action==='v2_disable_game'){
     const category=game()?.category||state?.show?.gift?.category||$('#disable-select')?.value;
     if(!category)throw Error('Geen spel geselecteerd.');
     if(!confirm(`Spel ${cat(category).name} voor de rest van deze spelavond uitschakelen?`))return;
     await host(action,{category});
+  }else if(action==='v2_release_seat'){
+    if(!confirm(`Telefoon van ${pl(b.dataset.value)?.name||'deze speler'} ontkoppelen? Die speler kan daarna opnieuw aanmelden, ook met een andere telefoon.`))return;
+    await host(action,{player:b.dataset.value});
+  }else if(action==='v2_finish'){
+    if(!confirm('De spelavond afsluiten? Staat de boodschappenlijst nog open, dan volgt eerst nog de herinnerronde.'))return;
+    await host(action);
   }else if(action==='v2_enable_game'){
     await host(action,{category:$('#enable-select')?.value});
   }else if(action==='v2_spin'){
@@ -373,7 +481,7 @@ async function act(b){if(busy)return;const action=b.dataset.act;busy=true;b.disa
    await host('v2_story',{player:$('#story-player')?.value,story:$('#host-story')?.value});
   }else if(action==='v2_start'){
    const form=$('#setup-form');
-   if(form){const fd=new FormData(form);await host('v2_configure',{players:Array.from({length:4},(_,i)=>({name:fd.get('name'+i),target:Number(fd.get('target'+i))}))});}
+   if(form){const fd=new FormData(form);await host('v2_configure',{players:Array.from({length:4},(_,i)=>({name:fd.get('name'+i)}))});}
    await host('v2_start');
   }else if(action==='v2_direct'){
    await host(action,{category:$('#quick-game')?.value});
@@ -381,17 +489,15 @@ async function act(b){if(busy)return;const action=b.dataset.act;busy=true;b.disa
    await host(action,{round:Number(b.dataset.round),player:b.dataset.player,accepted:b.dataset.accepted==='true',remember:true});
   }else if(action==='v2_grocery_override'){
    await host(action,{player:b.dataset.player,guess:decodeURIComponent(b.dataset.guess),accepted:b.dataset.accepted==='true'});
-  }else if(action==='v2_give'){
-   if(!confirm(`Een cadeau voor ${name(b.dataset.value).replace(/&[^;]+;/g,'')} uit de zak pakken?`))return;
-   await host(action,{recipient:b.dataset.value});
   }else if(action==='v2_cancel'){
-   if(!confirm('Minigame annuleren zonder cadeau-uitdeling?'))return;
+   if(!confirm('Minigame annuleren? Het spel komt dan terug op het rad.'))return;
    await host(action);
   }else if(action==='v2_grocery_close'){
    await host(action);
   }else if(action.startsWith('v2_')){
    await host(action);
   }
+  clearDrafts(action);
   await refresh(true);
  }catch(e){toast(e.message)}finally{busy=false;if(b.isConnected)b.disabled=false;}}
 document.addEventListener('click',e=>{
@@ -403,18 +509,21 @@ document.addEventListener('submit',async e=>{
  e.preventDefault();if(busy)return;busy=true;
  try{if(e.target.id==='setup-form'){
   const fd=new FormData(e.target);
-  await host('v2_configure',{players:Array.from({length:4},(_,i)=>({name:fd.get('name'+i),target:Number(fd.get('target'+i))}))});
+  await host('v2_configure',{players:Array.from({length:4},(_,i)=>({name:fd.get('name'+i)}))});
+  clearDrafts('v2_start');
  }else{
   const file=$('#csv-file').files[0];if(!file)throw Error('Kies eerst een CSV-bestand.');
   if(file.size>300000)throw Error('CSV mag maximaal 300 KB zijn.');
   const res=await host('import_hitster',{csv:await file.text()});
   importNotice=`${res.added} kaarten toegevoegd, ${res.duplicates} dubbel, ${res.skipped} overgeslagen.`;
+  e.target.reset();
  }
  await refresh(true);}catch(err){toast(err.message)}finally{busy=false;}
 });
 document.addEventListener('click',e=>{
+ const peek=e.target.closest('[data-peek]');if(peek){revealedWord=revealedWord===peek.dataset.peek?'':peek.dataset.peek;renderApp();return;}
  if(e.target.closest('#retry-show')){refresh(true);return;}
- if(e.target.closest('[data-enable-sound]')){audioEnabled=true;sound();const x=e.target.closest('button');x.textContent='🔊 Geluid aan';}
+ if(e.target.closest('[data-enable-sound]')){audioEnabled=!audioEnabled;const x=e.target.closest('button');if(audioEnabled){const A=window.AudioContext||window.webkitAudioContext;if(A){audioContext ||=new A();audioContext.resume().catch(()=>{});}if(state?.show?.mode==='grocery_alarm')sound();}else stopAlarmSound();x.textContent=audioEnabled?'🔊 Geluid aan':'🔈 Geluid aanzetten';x.setAttribute('aria-pressed',String(audioEnabled));}
 });
 $('#app').innerHTML=page==='home'?home():'<div class="loading">🎁 De spelshow wordt klaargezet…</div>';
 refresh(true);setInterval(()=>refresh(),950);setInterval(setCountdowns,180);

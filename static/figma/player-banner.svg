@@ -1,0 +1,15 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="740" height="244" viewBox="0 0 740 244" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Beurtbord / in tone with background" clip-path="url(#clip0_0_4)">
+<path id="Vector" d="M0 25H615L720 122L615 219H0V25Z" fill="url(#paint0_linear_0_4)" stroke-width="7" stroke="#F2B65E"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_0_4" x1="0" y1="25" x2="720" y2="25" gradientUnits="userSpaceOnUse">
+<stop stop-color="#35051A"/>
+<stop offset="0.75" stop-color="#740A2B"/>
+<stop offset="1" stop-color="#38091A"/>
+</linearGradient>
+<clipPath id="clip0_0_4">
+<rect width="740" height="244" fill="white"/>
+</clipPath>
+</defs>
+</svg>
