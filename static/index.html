@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0d1821"/>
   <title>De Grote Sinterklaas Spellenavond 🎁</title>
   <script>if(location.pathname==='/screen')document.documentElement.classList.add('tv-display');</script>
-  <link rel="stylesheet" href="/v2.css"/>
+  <link rel="stylesheet" href="/v2.css?build=20261126-v21"/>
 </head>
 <body>
   <div id="app"><div class="loading"><span class="huge">🎁</span><p>De pakjesavond wordt klaargezet…</p></div></div>
@@ -26,7 +26,6 @@
     const wheel = document.getElementById('emergency-wheel');
     const disable = document.getElementById('emergency-disable');
     const message = document.getElementById('emergency-message');
-    panel.hidden = false;
     async function command(action) {
       wheel.disabled = true;
       disable.disabled = true;
@@ -62,13 +61,16 @@
         wheel.hidden = ['setup','wheel','finished'].includes(mode);
         disable.hidden = !(mode === 'game' || mode === 'spinning' ||
           (mode === 'gift' && show.gift && show.gift.category !== 'grocery'));
-        if (!wheel.hidden || !disable.hidden) panel.hidden = false;
-      } catch(_) { /* Keep emergency recovery available while polling is broken. */ }
+        panel.hidden = wheel.hidden && disable.hidden && !message.textContent;
+      } catch(_) {
+        // Keep emergency recovery available while polling is broken.
+        wheel.hidden = false; panel.hidden = false;
+      }
     }
     updateControls();
     setInterval(updateControls,1500);
   })();
   </script>
-  <script src="/v2.js?build=20261110-bootfix" defer></script>
+  <script src="/v2.js?build=20261126-v21" defer></script>
 </body>
 </html>

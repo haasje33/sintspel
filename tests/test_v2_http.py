@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Live HTTP smoke test. Run a dedicated server, e.g. PARTY_PORT=8766 python server.py."""
-import json,os,sys,urllib.request,urllib.parse
+import json,os,sys,urllib.request,urllib.parse,urllib.error
 from pathlib import Path
 BASE='http://127.0.0.1:'+os.environ.get('PARTY_PORT','8766')
 ROOT=Path(__file__).resolve().parents[1]
@@ -29,8 +29,24 @@ def main():
         assert 'function tvJoinMini()' in frontend
         assert 'Meedoen / opnieuw verbinden' in frontend
         assert 'state.join_url' in frontend
+        # Static files carry explicit content types (Windows registry independent).
+        for path,ctype in [('/v2.js','text/javascript'),('/v2.css','text/css'),('/play','text/html'),
+                           ('/cards.svg','image/svg+xml'),('/card-back.svg','image/svg+xml')]:
+            with urllib.request.urlopen(BASE+path,timeout=8) as response:
+                assert response.headers.get_content_type()==ctype,(path,response.headers.get_content_type())
         ad('v2_reset',confirmation='RESET')
         st=get();assert st['host_authorized'] and st['show']['mode']=='setup'
+        # A phone switching seats frees its previous seat; the host can release seats.
+        first=api('/api/claim',{'room':st['room'],'player':'p3'})['token']
+        again=api('/api/claim',{'room':st['room'],'player':'p2','token':first})['token']
+        assert again!=first and [p['joined'] for p in get()['players']]==[False,True,False,False]
+        ad('v2_release_seat',player='p2')
+        assert not any(p['joined'] for p in get()['players'])
+        # A rejected configuration must not half-apply (transaction rollback).
+        try:
+            ad('v2_configure',players=[{'name':'Jan','target':3}]*4);raise AssertionError('accepted duplicates')
+        except urllib.error.HTTPError as e:assert e.code==400
+        assert 'Jan' not in [p['name'] for p in get()['players']]
         assert isinstance(st['show'],dict) and st['show']['hitster_count']>=100
         assert len(st['show']['hitster_cards'])==st['show']['hitster_count']
         with urllib.request.urlopen(BASE+'/api/state',timeout=8) as response:

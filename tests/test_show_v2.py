@@ -56,11 +56,12 @@ class ShowTests(unittest.TestCase):
     def test_escape_from_partial_gifting_keeps_awards(self):
         self.start('dice')
         game.gift_start(self.s,['p1','p2'],'dice')
-        self.a('v2_give',recipient='p1')
-        self.assertEqual(self.s['players'][0]['received'],1)
+        first=game.gift_requirement(self.s)['eligible'][0]
+        self.a('v2_give',recipient=first)
+        self.assertEqual(game.player(self.s,first)['received'],1)
         self.a('v2_return_wheel')
         self.assertEqual(self.s['show2']['mode'],'wheel')
-        self.assertEqual(self.s['players'][0]['received'],1)
+        self.assertEqual(game.player(self.s,first)['received'],1)
         self.assertEqual(self.s['show2']['gifts_given'],1)
         self.assertEqual(self.s['show2']['regular_completed'],1)
         self.assertTrue(self.s['show2']['round_history'][-1]['gifts_skipped'])
@@ -112,7 +113,7 @@ class ShowTests(unittest.TestCase):
     def test_disabling_during_gifting_keeps_given_gifts(self):
         self.start('dice')
         game.gift_start(self.s,['p1','p2'],'dice')
-        self.a('v2_give',recipient='p1')
+        self.a('v2_give',recipient=game.gift_requirement(self.s)['eligible'][0])
         self.a('v2_disable_game',category='dice')
         self.assertEqual(self.s['show2']['gifts_given'],1)
         self.assertEqual(self.s['show2']['mode'],'wheel')
@@ -126,7 +127,7 @@ class ShowTests(unittest.TestCase):
             self.assertIsInstance(view,dict)
             self.assertEqual(view['mode'],'setup')
             self.assertIn('has_story',view)
-            self.assertEqual(len(view['games']),7)
+            self.assertEqual(len(view['games']),8)
             if is_admin:
                 self.assertEqual(view['hitster_count'],len(setup['hitster_cards']))
                 self.assertEqual(view['hitster_cards'],setup['hitster_cards'])
@@ -330,7 +331,7 @@ class ShowTests(unittest.TestCase):
         self.assertIn(r['correct'],('left','middle','right'))
         self.assertNotIn('song',game.view(self.s)['game']['current'])
 
-    def test_quiplash_tie_and_two_gifts(self):
+    def test_quiplash_tie_gives_each_winner_one_gift(self):
         g=self.start('quiplash')
         for i in range(4):
             r=g['rounds'][i]
@@ -349,7 +350,8 @@ class ShowTests(unittest.TestCase):
         self.assertEqual(len(self.s['show2']['gift']['winners']),2)
         self.assertEqual(need['kind'],'self')
         self.complete_gift()
-        self.assertEqual(sum(p['received'] for p in self.s['players']),4)
+        self.assertEqual(sum(p['received'] for p in self.s['players']),2)
+        self.assertEqual([p['received'] for p in self.s['players']],[1,1,0,0])
         self.assertEqual(self.s['show2']['regular_completed'],1)
 
     def test_cards_eliminations(self):
@@ -398,5 +400,177 @@ class ShowTests(unittest.TestCase):
                 self.complete_gift()
                 break
 
+
+class RuleChangeTests(unittest.TestCase):
+    """Sintspel 2.1: one gift per winner, randomised Wie van de 3?, Pepernotenpong."""
+    def setUp(self):
+        self.s=fixture()
+        self.save=lambda:None
+        game.admin(self.s,{'action':'v2_start'},self.save)
+    def a(self,action,**kwargs):
+        return game.admin(self.s,{'action':action,**kwargs},self.save)
+    def p(self,pid,action,value=None):
+        return game.submit(self.s,{'action':action,'value':value},pid,self.save)
+    def to_review(self,category,points):
+        self.a('v2_direct',category=category)
+        g=self.s['show2']['game']
+        g['phase']='review'
+        g['scores']=dict(points)
+        return g
+    def give_all(self):
+        given=[]
+        while self.s['show2']['mode']=='gift':
+            need=game.gift_requirement(self.s)
+            given.append((need['winner'],need['kind'],need['eligible'][0]))
+            self.a('v2_give',recipient=need['eligible'][0])
+        return given
+
+    def test_zero_points_means_no_winner_and_no_gift(self):
+        self.to_review('dice',{'p1':0,'p2':0,'p3':0,'p4':0})
+        self.assertEqual(self.a('v2_confirm')['winners'],[])
+        self.assertIn(self.s['show2']['mode'],('wheel','grocery_alarm'))  # alarm may follow game 1
+        self.assertEqual(sum(p['received'] for p in self.s['players']),0)
+        self.assertEqual(self.s['show2']['regular_completed'],1)
+        self.assertEqual(sum(p['wins'] for p in self.s['players']),0)
+
+    def test_three_tied_top_scorers_each_take_one_gift(self):
+        self.to_review('dice',{'p1':3,'p2':3,'p3':3,'p4':2})
+        self.a('v2_confirm')
+        given=self.give_all()
+        self.assertEqual(len(given),3)
+        self.assertTrue(all(kind=='self' for _,kind,_ in given))
+        self.assertEqual([p['received'] for p in self.s['players']],[1,1,1,0])
+
+    def test_winner_with_all_own_gifts_chooses_for_lowest_other(self):
+        for p in self.s['players']:p['target']=3
+        self.s['players'][0]['received']=3
+        self.s['players'][1]['received']=1
+        self.s['players'][2]['received']=2
+        self.to_review('dice',{'p1':5,'p2':0,'p3':0,'p4':0})
+        self.a('v2_confirm')
+        need=game.gift_requirement(self.s)
+        self.assertEqual(need['kind'],'other')
+        self.assertEqual(need['eligible'],['p4'])
+        with self.assertRaises(ValueError):self.a('v2_give',recipient='p1')
+
+    def test_undo_restores_the_gift_that_ended_the_phase(self):
+        self.to_review('dice',{'p1':2,'p2':0,'p3':0,'p4':0})
+        self.a('v2_confirm')
+        self.a('v2_give',recipient='p1')
+        self.assertIn(self.s['show2']['mode'],('wheel','grocery_alarm'))
+        self.assertTrue(game.view(self.s,True)['can_undo_gift'])
+        self.a('v2_undo_gift')
+        self.assertEqual(self.s['show2']['mode'],'gift')
+        self.assertEqual(self.s['players'][0]['received'],0)
+        self.assertEqual(self.s['show2']['gifts_given'],0)
+        self.assertEqual(self.s['show2']['regular_completed'],0)
+        self.assertEqual(self.s['history'],[])
+        self.a('v2_give',recipient='p1')
+        self.assertEqual(self.s['players'][0]['received'],1)
+
+    def test_undo_is_blocked_once_the_next_game_starts(self):
+        self.to_review('dice',{'p1':2,'p2':0,'p3':0,'p4':0})
+        self.a('v2_confirm');self.a('v2_give',recipient='p1')
+        self.s['show2']['mode']='wheel'
+        self.a('v2_direct',category='cards')
+        self.assertFalse(game.view(self.s,True)['can_undo_gift'])
+        with self.assertRaises(ValueError):self.a('v2_undo_gift')
+
+    def test_three_owners_are_a_random_derangement(self):
+        seen=set()
+        for _ in range(60):
+            pairs=game.random_pairs(['p1','p2','p3','p4'])
+            self.assertEqual(sorted(i for i,_ in pairs),['p1','p2','p3','p4'])
+            self.assertEqual(sorted(o for _,o in pairs),['p1','p2','p3','p4'])
+            self.assertTrue(all(i!=o for i,o in pairs))
+            seen.add(tuple(map(tuple,pairs)))
+        self.assertGreater(len(seen),10)
+        # Not always "the next seat" anymore.
+        nxt={'p1':'p2','p2':'p3','p3':'p4','p4':'p1'}
+        self.assertTrue(any(any(nxt[i]!=o for i,o in p) for p in seen))
+
+    def test_three_needs_new_stories_after_it_was_played(self):
+        g=self.to_review('three',{'p1':3,'p2':0,'p3':0,'p4':0})
+        old=self.s['show2']['stories']['p1']
+        self.a('v2_confirm')
+        self.give_all()
+        self.assertEqual(self.s['show2']['stories'],{})
+        view=game.view(self.s)
+        self.assertTrue(view['stories_needed'])
+        with self.assertRaises(ValueError):self.p('p1','v2_story',old)  # reused story
+        self.s['show2']['mode']='wheel'
+        self.s['show2']['bag']=['three']
+        with self.assertRaises(ValueError):self.a('v2_spin')
+        with self.assertRaises(ValueError):self.a('v2_direct',category='three')
+        self.s['show2']['bag']=['three','dice']
+        for _ in range(10):
+            self.a('v2_spin');self.assertEqual(self.s['show2']['game']['category'],'dice')
+            self.a('v2_return_wheel')
+        for i,p in enumerate(self.s['players']):self.p(p['id'],'v2_story','Een gloednieuw waar verhaal nummer %d'%i)
+        self.a('v2_direct',category='three')
+        self.assertEqual(self.s['show2']['game']['category'],'three')
+
+    def test_pepernotenpong_is_an_intermezzo_without_bag_gifts(self):
+        self.a('v2_direct',category='pong')
+        g=self.s['show2']['game']
+        self.assertEqual(g['phase'],'play')
+        order=g['rounds'][0]['order']
+        self.assertEqual(sorted(order),['p1','p2','p3','p4'])
+        view=game.view(self.s)
+        self.assertEqual(view['game']['current']['order'],order)
+        self.assertEqual(view['game']['current']['throws'],game.PONG_THROWS)
+        for _ in range(4):self.a('v2_pong_next')
+        self.assertEqual(g['phase'],'done')
+        with self.assertRaises(ValueError):self.a('v2_pong_next')
+        self.a('v2_pong_finish')
+        self.assertEqual(self.s['show2']['mode'],'wheel')
+        self.assertNotIn('pong',self.s['show2']['bag'])
+        self.assertEqual(sum(p['received'] for p in self.s['players']),0)
+        self.assertEqual(self.s['show2']['regular_completed'],0)
+
+    def test_classic_hard_is_tight(self):
+        for _ in range(40):
+            r=game.find_classic(self.s,'hard')
+            self.assertIsNotNone(r)
+            years=[r['year']]+[c['year'] for c in r['ref']]
+            close=min(abs(r['year']-c['year']) for c in r['ref'])
+            self.assertTrue(1<=close<=3 and max(years)-min(years)<=12,years)
+            r=game.find_classic(self.s,'medium')
+            close=min(abs(r['year']-c['year']) for c in r['ref'])
+            self.assertTrue(4<=close<=8,r)
+
+    def test_grocery_singular_and_plural_match(self):
+        for guess,item in [('appel','appels'),('banaan','bananen'),('tomaat','tomaten'),('ei','eieren'),
+                           ('druif','druiven'),('kip filet','kipfilet')]:
+            self.assertTrue(game.same_grocery(guess,item),(guess,item))
+        for guess,item in [('zout','zalm'),('melk','mais'),('pasta','paprika')]:
+            self.assertFalse(game.same_grocery(guess,item),(guess,item))
+
+    def test_configure_rejects_without_partial_changes(self):
+        fresh=fixture()
+        before=[p['name'] for p in fresh['players']]
+        with self.assertRaises(ValueError):
+            game.admin(fresh,{'action':'v2_configure','players':[{'name':'Jan','target':3}]*4},self.save)
+        self.assertEqual([p['name'] for p in fresh['players']],before)
+
+    def test_reset_frees_seats_and_clears_stories(self):
+        self.a('v2_reset',confirmation='RESET')
+        self.assertTrue(all(p['token'] is None for p in self.s['players']))
+        self.assertEqual(self.s['show2']['stories'],{})
+
+    def test_release_seat(self):
+        self.a('v2_release_seat',player='p2')
+        self.assertIsNone(self.s['players'][1]['token'])
+        self.assertEqual(self.s['players'][0]['token'],'t1')
+
+    def test_tv_sees_grocery_scores_and_taboo_attempts(self):
+        self.a('v2_direct',category='taboo')
+        r=self.s['show2']['game']['rounds'][0]
+        self.p(r['performer'],'v2_start_timer')
+        guesser=next(p for p in game.player_ids(self.s) if p!=r['performer'])
+        self.p(guesser,'v2_guess','iets')
+        tv=game.view(self.s)
+        self.assertEqual(tv['game']['current']['attempt_count'],1)
+        self.assertNotIn('word',tv['game']['current'])
 
 if __name__=='__main__':unittest.main()

@@ -195,3 +195,101 @@ html.tv-display footer{display:none}
   html.tv-display .tv-join{flex-direction:column;text-align:center}
 }
 @media(prefers-reduced-motion:reduce){html.tv-display .wheel-result-pending{opacity:1;visibility:visible;animation:none}}
+
+
+/* TV interrupt: the alarm is not another game card. Two alternating rotating
+   beacons, a red warning wash, and its own visual hierarchy. */
+body:has(.alarm-screen){background:#25050a}
+.alarm-screen{
+  isolation:isolate;overflow:hidden;position:relative;min-height:min(80vh,1100px);
+  border:10px solid #ff7367;border-radius:26px;
+  background:radial-gradient(ellipse at 50% 47%,#98182b 0%,#5b0816 51%,#2c030b 100%);
+  box-shadow:0 0 55px #e21d388c,inset 0 0 105px #ff28385e;
+  animation:alarm-warning-wash 1.7s ease-in-out infinite alternate
+}
+.alarm-screen::before{
+  content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:linear-gradient(90deg,transparent 4%,#ff173d30 22%,transparent 46%,transparent 55%,#ff173d30 80%,transparent 97%);
+  animation:alarm-warning-wash 1.7s ease-in-out infinite alternate
+}
+.alarm-copy{position:relative;z-index:2;max-width:min(84%,1600px);display:flex;align-items:center;flex-direction:column;text-align:center}
+.alarm-copy h1{color:#fff5ea;line-height:.98;text-shadow:0 0 36px #fc284b,0 7px 0 #470713}
+.alarm-copy h2{max-width:100%;text-wrap:balance;color:#ffe2ac;text-shadow:0 3px 18px #27030b}
+.alarm-copy .eyebrow{color:#ffd39e}
+.alarm-copy p{color:#fff4e8}
+.alarm-beacon{
+ position:absolute;top:34%;width:clamp(120px,20%,260px);aspect-ratio:1;
+ display:grid;place-items:center;border-radius:50%;
+ border:6px solid #ffad80;color:#fff0da;background:radial-gradient(circle,#f9284a 0%,#a40e25 66%,#5d0918 100%);
+ box-shadow:0 0 55px #ff254ac9,0 0 130px #ff315f82,inset 0 0 40px #ffb67766;
+ z-index:1;animation:alarm-beacon-pulse 1.7s ease-in-out infinite
+}
+.alarm-beacon::before{
+ content:"";position:absolute;inset:-16%;z-index:-1;border-radius:50%;
+ background:conic-gradient(from 0deg,transparent 0deg,#ff63724f 24deg,transparent 62deg,transparent 178deg,#ff637252 212deg,transparent 245deg);
+ animation:alarm-beacon-rotate 1.7s linear infinite
+}
+.alarm-beacon svg{width:75%;height:75%;filter:drop-shadow(0 0 14px #ffd0aa)}
+.alarm-beacon-left{left:3%}
+.alarm-beacon-right{right:3%;animation-delay:-.85s}
+.alarm-beacon-right::before{animation-direction:reverse}
+@keyframes alarm-warning-wash{
+ from{filter:brightness(.88);box-shadow:0 0 24px #e21d3860,inset 0 0 65px #ff283835}
+ to{filter:brightness(1.16);box-shadow:0 0 80px #ff284caa,inset 0 0 195px #ff4a5e99}
+}
+@keyframes alarm-beacon-pulse{0%,100%{opacity:.53;transform:scale(.96)}50%{opacity:1;transform:scale(1.07)}}
+@keyframes alarm-beacon-rotate{to{transform:rotate(360deg)}}
+@media(max-width:700px){
+ .alarm-screen{min-height:72vh;padding:45px 12px}
+ .alarm-copy{max-width:94%;gap:18px}
+ .alarm-beacon{top:8%;width:78px;border-width:3px;opacity:.7}
+ .alarm-beacon-left{left:5%}.alarm-beacon-right{right:5%}
+ .alarm-copy h1{font-size:clamp(3.2rem,14vw,6rem)}
+ .alarm-copy h2{font-size:clamp(1.4rem,6vw,3rem)}
+}
+@media(prefers-reduced-motion:reduce){
+ .alarm-screen,.alarm-screen::before,.alarm-beacon,.alarm-beacon::before{animation:none}
+ .alarm-beacon{opacity:1}
+}
+
+/* ---- Sintspel 2.1 additions ---- */
+/* Playing cards from the Figma deck (cards.svg: 9 columns × 6 rows, jokers unused). */
+.playing-card{aspect-ratio:750/1050}
+.playing-back,.playing-face{border:0;border-radius:6%/4.3%;box-shadow:0 10px 26px #0007}
+.playing-back{background:#fff url(/card-back.svg) center/100% 100% no-repeat}
+.playing-back small{display:none}
+.playing-face{background-color:#fff;background-image:url(/cards.svg);background-repeat:no-repeat;background-size:900% 600%;
+ background-position:calc(var(--col) * 12.5%) calc(var(--row) * 20%);font-size:0}
+html.tv-display .playing-back,html.tv-display .playing-face{font-size:0}
+
+/* Host: phone seats */
+.seat-status{grid-column:1/-1;font-size:.78rem;color:var(--muted);display:flex;align-items:center;gap:8px;margin-top:4px}
+.link-btn{background:none;border:0;padding:0;color:var(--gold);text-decoration:underline;font:inherit;cursor:pointer;min-height:0;box-shadow:none}
+.player-row{flex-wrap:wrap}
+
+/* Host-only reveal of the secret word (the host plays along) */
+.word-peek{display:flex;flex-direction:column;align-items:center;gap:10px;margin:14px auto}
+.word-peek .secret-word{min-width:min(100%,420px)}
+
+/* Wie van de 3? — new stories and the final owner reveal */
+.story-box{margin:18px 0}
+.owner-reveal{margin:24px 0;text-align:left}
+.owner-row{border-top:1px solid var(--line);padding:12px 0}
+.owner-row blockquote{margin:0 0 6px;font-style:italic;color:var(--cream)}
+.owner-row p{margin:0;color:var(--muted)}
+
+/* Pepernotenpong intermezzo */
+.pong-rules{font-size:clamp(1.05rem,1.8vw,1.6rem);max-width:900px;margin:12px auto}
+.pong-now{font-size:clamp(1.4rem,3vw,2.8rem);font-weight:900;color:var(--gold);margin:18px 0}
+.pong-order{list-style:none;padding:0;margin:18px auto;display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
+.pong-order li{display:flex;align-items:center;gap:10px;padding:12px 20px;border-radius:999px;border:1px solid var(--line);background:#192f46;font-weight:800}
+.pong-order li span{display:inline-grid;place-items:center;width:1.8em;height:1.8em;border-radius:50%;background:#0d1a29}
+.pong-order li.active{border-color:var(--gold);box-shadow:0 0 0 3px #e6bc7055;color:var(--gold)}
+.pong-order li.done{opacity:.55}
+html.tv-display .pong-order li{font-size:clamp(22px,1.4vw,48px);padding:clamp(14px,1vw,30px) clamp(24px,1.6vw,52px)}
+
+/* Keep the emergency controls from covering the host's own buttons */
+html:has(#emergency-panel:not([hidden])) body{padding-bottom:110px}
+.pong-stage{text-align:center}.pong-stage .eyebrow{justify-content:center}
+/* On the smaller host/laptop stage the beacons sit above the headline instead of over it. */
+html:not(.tv-display) .alarm-beacon{top:5%;width:clamp(70px,10%,130px);border-width:4px}
