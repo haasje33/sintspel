@@ -256,10 +256,11 @@ body:has(.alarm-screen){background:#25050a}
 /* Playing cards from the Figma deck (cards.svg: 9 columns × 6 rows, jokers unused). */
 .playing-card{aspect-ratio:750/1050}
 .playing-back,.playing-face{border:0;border-radius:6%/4.3%;box-shadow:0 10px 26px #0007}
-.playing-back{background:#fff url(/card-back.svg) center/100% 100% no-repeat}
+.playing-back{background:#fff url(/card-back.svg?v=2) center/100% 100% no-repeat}
 .playing-back small{display:none}
-.playing-face{background-color:#fff;background-image:url(/cards.svg);background-repeat:no-repeat;background-size:900% 600%;
- background-position:calc(var(--col) * 12.5%) calc(var(--row) * 20%);font-size:0}
+.playing-face{background:#fff;font-size:0;overflow:hidden}
+/* The deck image is 9×6 cards; shift it so only this card shows. */
+.playing-face img.deck{position:absolute;width:900%;height:600%;max-width:none;left:calc(var(--col) * -100%);top:calc(var(--row) * -100%)}
 html.tv-display .playing-back,html.tv-display .playing-face{font-size:0}
 
 /* Host: phone seats */

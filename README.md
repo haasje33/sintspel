@@ -8,8 +8,8 @@ Een lokale, interactieve familiespelshow. De route **`/screen`** gebruikt een ap
 2. Installeer Python 3.10 of nieuwer als dat nog niet is gebeurd.
 3. Start op Windows `start.bat`; op Mac/Linux `./start.sh` of `python3 server.py`.
 4. Open op de **serverlaptop** `http://127.0.0.1:8765/host`. De lokale server opent automatisch de beveiligde spelleiderlink. Je kunt ook de volledige link uit het terminalvenster gebruiken.
-5. Open `/screen` op de TV. De TV toont een grote **QR-code voor spelers**. Scan deze met de telefooncamera; de spelcode is dan al ingevuld en iedereen kiest alleen nog zijn eigen naam. Handmatig `/play` openen en de code invullen kan ook. Tijdens de hele spelavond blijft een **kleine aanmeld-QR-code rechtsonder op het TV-scherm** zichtbaar, ook bij het rad, minigames, uitslagen en de cadeauverdeling. Na het per ongeluk sluiten of herladen van de telefoonpagina kun je opnieuw scannen; dezelfde browser herkent de eerder verbonden speler via het lokaal bewaarde aanmeldtoken. Gebruikt iemand een andere telefoon of browser, dan kan de spelleider die plek in de zijbalk met **Ontkoppel** vrijgeven.
-6. Stel de namen en het aantal cadeaus in, verzamel de persoonlijke weetjes, en klik op **Start de spelshow**. Iedere gewonnen minigame levert per winnaar één cadeau op; reken grofweg op 3 à 4 minigames per uur bij het kiezen van het aantal cadeaus per speler.
+5. Open `/screen` op de TV. De TV toont een grote **QR-code voor spelers**. Scan deze met de telefooncamera; de spelcode is dan al ingevuld en iedereen kiest alleen nog zijn eigen naam. Handmatig `/play` openen en de code invullen kan ook. Tijdens de hele spelavond blijft een **kleine aanmeld-QR-code rechtsboven op het TV-scherm** zichtbaar. Na het per ongeluk sluiten of herladen van de telefoonpagina kun je opnieuw scannen; dezelfde browser herkent de eerder verbonden speler via het lokaal bewaarde aanmeldtoken. Gebruikt iemand een andere telefoon of browser, dan kan de spelleider die plek in de zijbalk met **Ontkoppel** vrijgeven.
+6. Vul de namen in, verzamel de persoonlijke weetjes, en klik op **Start de spelshow**.
 7. Selecteer op de TV **Geluid aanzetten** om de alarmgeluiden van het verrassingsspel hoorbaar te maken. Zo nodig wordt hiervoor eerst een klik op de TV-browser gevraagd.
 
 **Let op:** houd de hostlink met `?key=...` privé. Maak geen poort van de lokale server openbaar via de router. Bij updates de server afsluiten en opnieuw starten.
@@ -20,7 +20,7 @@ Een lokale, interactieve familiespelshow. De route **`/screen`** gebruikt een ap
 
 Het rad toont het gekozen spel **pas nadat** de draai-animatie stopt; daarna gaat de show verder naar het spel.
 
-Het spelrad heeft **acht** vakken: zeven minigames en het intermezzo Pepernotenpong. Na elk spel verdwijnt dat vak; wanneer alle acht geweest zijn, begint een nieuwe cyclus. De spelshow loopt door tot alle ingestelde cadeaus zijn verdeeld.
+Het spelrad heeft **acht** vakken: zeven minigames en het intermezzo Pepernotenpong. Na elk spel verdwijnt dat vak; wanneer alle acht geweest zijn, begint een nieuwe cyclus. De spelleider bepaalt zelf wanneer de avond klaar is: **Avond afsluiten** in het menu links (alleen bij het rad).
 
 | Spel | Verloop |
 |---|---|
@@ -31,7 +31,7 @@ Het spelrad heeft **acht** vakken: zeven minigames en het intermezzo Pepernotenp
 | Yahtzee-sprint | Acht dobbelrondes met vijf **echte** dobbelstenen: hoogste som, meest gelijke dobbelstenen, meest van een bepaald getal en langste straat. Een Yahtzee levert altijd drie bonuspunten op; de gewone opdracht wordt daarna door de anderen uitgevochten om één punt. |
 | Kaartenduel | Acht deals met vier kaarten uit een gewoon spel van 52 (zonder jokers). Voorspel rood/zwart, hoger/lager, binnen/buiten en de kaartsoort. Alleen goede voorspellers gaan door. Laatste overblijver of alle gelijk geëindigde spelers krijgen één punt. |
 | Verboden woord | Acht beurten van één minuut; iedereen omschrijft twee keer. De omschrijver ziet het geheime woord en drie verboden woorden op de eigen telefoon. De rest typt antwoorden; bij een goede gok verdient zowel de gokker als de omschrijver punten. Omdat de spelleider meespeelt, staat het woord niet op het hostscherm; met **👁 Toon woord** kan de spelleider het bewust bekijken, bijvoorbeeld als de telefoon van de omschrijver uitvalt. |
-| Pepernotenpong | Intermezzo om even in beweging te komen. Iedereen gooit om de beurt drie pepernoten naar bekertjes; onder elk bekertje ligt een klein cadeautje. Raak = dat bekertje optillen en het cadeautje houden. De app toont de volgorde en wiens beurt het is; treffers worden niet geteld en de cadeauzak blijft ongemoeid. |
+| Pepernotenpong | Intermezzo om even in beweging te komen. Iedereen gooit om de beurt drie pepernoten naar bekertjes; onder elk bekertje ligt een klein cadeautje. Raak = dat bekertje optillen en het cadeautje houden. De app toont de regels en een willekeurige gooivolgorde; de spelleider sluit het intermezzo af. Treffers worden niet geteld en de cadeauzak blijft ongemoeid. |
 
 ### Verrassingsspel: Boodschappenlijst
 
@@ -39,11 +39,11 @@ Dit spel staat **niet op het rad**. Bij de overgang naar spel twee of drie gaat 
 
 ## Cadeauregels
 
-- De speler(s) met de hoogste score van de minigame winnen. Bij een gelijke hoogste score winnen ze allemaal; scoort iedereen 0 punten, dan wint niemand.
-- Iedere winnaar kiest **één cadeau** uit de zak: een eigen cadeau, zolang die er nog tegoed heeft.
-- Heeft een winnaar al zijn eigen cadeaus, dan kiest hij een cadeau voor een ander. De app toont dan de spelers met de minste cadeaus.
-- Zijn er minder cadeaus over dan winnaars, dan kiezen de winnaars met de minste cadeaus eerst. Het spel eindigt zodra de volledige voorraad is verdeeld.
-- Een verkeerd uitgegeven cadeau kan via **Laatste cadeau terugdraaien** worden hersteld, ook direct na het laatste cadeau van een ronde, tot het volgende spel begint.
+Het blijft gezellig en ongedwongen: de app houdt **niet** bij wie hoeveel cadeaus heeft of hoe vaak iemand won.
+
+- De speler(s) met de hoogste score van een minigame hebben gewonnen. Bij een gelijke hoogste score winnen ze allemaal (bijvoorbeeld drie spelers met 3 punten en één met 2: de drie met 3 punten winnen). Scoort iedereen 0 punten, dan wint niemand.
+- Iedere winnaar mag **één cadeau** uit de zak kiezen, voor zichzelf of voor een ander.
+- Bij **Avond afsluiten** volgt eerst nog de herinnerronde van het boodschappenspel als die open staat; daarna verschijnt het slotscherm. Met **Toch verder spelen** ga je terug naar het rad.
 
 ## Muziekkaarten toevoegen
 
@@ -73,11 +73,11 @@ Bij de einduitslag kan de host foutgerekende antwoorden alsnog goedkeuren of eer
 
 ## Voorkomen dat de spelavond vastloopt
 
-Op de **hostlaptop** staat rechts onderin een aparte noodbediening, onafhankelijk van de gewone spelinterface. **Terug naar het rad** breekt het huidige onderdeel direct af, zonder bevestigingsdialoog en zonder eerder uitgedeelde cadeaus te wissen. **Spel uitschakelen** vraagt bevestiging, sluit een probleemspel af en haalt het **voor de rest van de lopende avond** uit alle volgende radcycli. Spellen kun je vanaf het rad via **Spellen beheren** ook vooraf uitschakelen of later opnieuw inschakelen. Als alle zeven spellen uitstaan, kun je vanuit dit menu weer een spel inschakelen.
+Op de **hostlaptop** staat rechts onderin een aparte noodbediening, onafhankelijk van de gewone spelinterface. **Terug naar het rad** breekt het huidige onderdeel direct af, zonder bevestigingsdialoog en zonder eerder uitgedeelde cadeaus te wissen. **Spel uitschakelen** vraagt bevestiging, sluit een probleemspel af en haalt het **voor de rest van de lopende avond** uit alle volgende radcycli. Spellen kun je vanaf het rad via **Spellen beheren** ook vooraf uitschakelen of later opnieuw inschakelen. Als alle spellen uitstaan, kun je vanuit dit menu weer een spel inschakelen.
 
-Het rad mag beurtelings door de vier spelers **vanaf hun eigen telefoon** worden gedraaid. De beurt wisselt na een geslaagde draai; de host kan altijd namens een speler draaien als diens telefoon niet beschikbaar is. De noodstop kan ook een vastgelopen cadeau-uitdeling of boodschappenfase afbreken. Reeds gegeven cadeaus blijven staan; nog niet gegeven cadeaus in die uitdeling worden overgeslagen. Bij het overslaan van een vastgelopen boodschappenfase wordt de verrassing voor deze avond afgesloten.
+Het rad mag beurtelings door de vier spelers **vanaf hun eigen telefoon** worden gedraaid. De beurt wisselt na een geslaagde draai; de host kan altijd namens een speler draaien als diens telefoon niet beschikbaar is. De noodstop kan ook een vastgelopen boodschappenfase afbreken. Bij het overslaan van een vastgelopen boodschappenfase wordt de verrassing voor deze avond afgesloten.
 
-**Nieuwe spelavond** (zijbalk van de host) wist scores, cadeaustand, weetjes en telefoonkoppelingen, zodat een testronde niet doorwerkt in de echte avond. Namen, aantallen cadeaus en de muziekbibliotheek blijven bewaard.
+**Nieuwe spelavond** (menu links op de host) wist de voortgang, weetjes en telefoonkoppelingen, zodat een testronde niet doorwerkt in de echte avond. Namen en de muziekbibliotheek blijven bewaard.
 
 ## Opslag, netwerk en updates
 
@@ -115,4 +115,10 @@ PARTY_PORT=8766 python tests/test_v2_http.py
 
 ## Ontwerp
 
-De TV- en hostschermen volgen het Figma-ontwerp *Sintspel 2.0 — UI Design*. De speelkaarten (`static/cards.svg`, een publiek-domein kaartspel) en de kaartrug (`static/card-back.svg`) komen uit dat bestand.
+De schermen volgen het Figma-ontwerp *Sintspel 2.0 — UI Design*:
+
+- **TV** (`static/tv.js`, `static/tv.css`): alle schermen zijn op het 2560×1440-raster van het ontwerp gebouwd en schalen als geheel naar elk TV-formaat (1080p, 1440p, 4K; bij een andere beeldverhouding met zwarte randen). Zet de TV-browser op volledig scherm (F11).
+- **Host** (`static/host.css`): het dashboard volgt de stijl van het host-ontwerp, met een menu links, spelerskaarten rechts en de bediening in het midden.
+- **Telefoons** hebben geen eigen ontwerp in Figma en gebruiken de bestaande, eenvoudige layout.
+- Illustraties en iconen staan in `static/figma/`. De speelkaarten (`static/cards.svg`, een publiek-domein kaartspel; de jokers worden niet gebruikt) en de kaartrug (`static/card-back.svg`) komen ook uit het ontwerp. Het lettertype Manrope (SIL Open Font License) zit in `static/fonts/`, zodat alles ook zonder internet werkt.
+- Pepernotenpong heeft geen eigen Figma-scherm; dat scherm is in dezelfde stijl gebouwd.

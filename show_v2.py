@@ -973,7 +973,9 @@ def masked_round(s,g,r,is_admin,pid):
         if k in r:out[k]=copy.deepcopy(r[k])
     if cat=='three' and phase!='review':
         out.pop('owner',None)
-        if phase=='reveal':out['guess_skipped']=not bool(r.get('guess'))
+        if phase=='reveal':
+            out['guess_skipped']=not bool(r.get('guess'))
+            out['guess']=r.get('guess')  # the suspicion is shown; the owner stays secret
     if cat in ('classic','quiz'):
         out['qr_url']='/hitster/qr.png?id='+r['hidden_id'] if r.get('hidden_id') else None
         out['card_id']=r.get('hidden_id')

@@ -79,7 +79,32 @@ function tvJoinMini(){
   <div class="tv-mini-room">CODE ${html(state.room)}</div>
  </aside>`;
 }
-function shell(content,side=true){return `${decorate()}${header()}<main class="layout ${side?'with-sidebar':'full-stage'}"><section class="stage">${content}</section>${side?scoreboard():''}</main><footer>Een avond vol verrassingen · Alleen op jullie eigen wifi</footer>${tvJoinMini()}`;}
+// Host dashboard layout, after the Figma frame "HOST ★ Dashboard".
+const PLAYER_DOTS=['#36B5E2','#F13881','#FFD06D','#A15BE2'];
+function hostNav(){const mode=state.show?.mode||'setup';
+ const phase=mode==='setup'?'setup':mode==='wheel'||mode==='spinning'?'wheel':mode==='game'?'game':mode==='gift'?'gift':mode.startsWith('grocery_')?'grocery':'finished';
+ const items=[['setup','✎','Voorbereiding'],['wheel','◉','Spelrad'],['game','♫','Minigame'],['gift','🎁','Cadeautijd'],['grocery','🛒','Boodschappen'],['finished','★','Afsluiting']];
+ return `<nav class="hd-nav" aria-label="Spelavond"><div class="hd-nav-title">⌂ DASHBOARD</div><hr>
+ <div class="hd-nav-section">SPELAVOND</div>${items.map(([id,ic,l])=>`<div class="hd-nav-item ${id===phase?'active':''}"><span>${ic}</span>${l}</div>`).join('')}<hr>
+ <div class="hd-nav-section">BEHEER</div>
+ <a class="hd-nav-action" href="/screen" target="_blank" rel="noopener"><span>▣</span>TV-scherm openen</a>
+ ${mode==='wheel'?`<button class="hd-nav-action" data-act="v2_finish"><span>🏁</span>Avond afsluiten</button>`:''}
+ <button class="hd-nav-action" data-act="v2_reset"><span>↺</span>Nieuwe spelavond</button>
+ <img class="hd-props-left" src="/figma/host-props-left.png" alt=""></nav>`;}
+function hostPlayers(){const g=state.show?.game;
+ return `<aside class="hd-players"><h3>♟ SPELERS (${state.players.length})</h3>${state.players.map((p,i)=>`<div class="hd-tile"><i style="background:${PLAYER_DOTS[i]}"></i>
+  <div class="hd-tile-main"><b>${html(p.name)}</b><small>${p.joined?`📱 verbonden · ${button('v2_release_seat','Ontkoppel','link-btn',`data-value="${p.id}"`)}`:'📵 geen telefoon'}</small></div>
+  ${g?`<span class="hd-pts">${g.scores?.[p.id]??0} PT</span>`:''}</div>`).join('')}
+ <img class="hd-props-right" src="/figma/host-props-right.png" alt=""></aside>`;}
+function hostRoundHeader(){const g=state.show?.game;if(!g||state.show.mode!=='game')return '';const c=cat(g.category),r=g.current||{};
+ return `<div class="hd-round"><span class="hd-round-icon">${c.icon}</span><b>${html(c.name)}</b>${g.category!=='pong'?`<span class="hd-pill">VRAAG ${g.index+1} / ${g.total}</span>`:''}
+ ${r.deadline?`<span class="hd-clock">◴ <span data-countdown="${r.deadline}">01:00</span></span>`:''}</div>`;}
+function hostShell(content){return `<header class="hd-top"><img class="hd-canal" src="/figma/host-canal-skyline.svg" alt=""><img class="hd-head-left" src="/figma/host-header-left.png" alt="">
+ <img class="hd-head-sky" src="/figma/host-header-skyline.png" alt=""><div class="hd-brand"><b>SINTERKLAAS</b><strong>SPELSHOW</strong></div>
+ <span class="hd-code">CODE ${html(state.room)}</span><span class="hd-badge">HOST</span></header>
+ <div class="hd-grid">${hostNav()}<main class="hd-main">${hostRoundHeader()}<section class="stage">${content}</section></main>${hostPlayers()}</div>
+ <img class="hd-velvet" src="/figma/host-velvet-foreground.svg" alt="">`;}
+function shell(content,side=true){if(isHost)return hostShell(content);return `${decorate()}${header()}<main class="layout ${side?'with-sidebar':'full-stage'}"><section class="stage">${content}</section>${side?scoreboard():''}</main><footer>Een avond vol verrassingen · Alleen op jullie eigen wifi</footer>${tvJoinMini()}`;}
 const button=(act,label,cls='',attrs='')=>`<button class="btn ${cls}" data-act="${act}" ${attrs}>${label}</button>`;
 const pill=t=>`<span class="pill">${t}</span>`;
 function home(){return `<main class="entry-screen"><div class="entry-panel"><div class="big-signet">🎁</div><p class="eyebrow">Sintspel 2.0</p><h1>Welkom op de<br>pakjesavond!</h1><p>De laptop is de spelleider, de TV het speelbord en iedere speler gebruikt een telefoon.</p>
@@ -163,7 +188,7 @@ const SUIT_NAMES={H:'harten',D:'ruiten',C:'klaveren',S:'schoppen'};
 function cardLabel(c){const v={14:'aas',13:'heer',12:'vrouw',11:'boer'}[c.v]||String(c.v);return `${SUIT_NAMES[c.s]} ${v}`;}
 // cards.svg (Figma): 9 columns × 6 rows; rows run ♠ A–K, ♥ A–K, ♣ A–K, ♦ A–K, then jokers (never used).
 function cardFace(c){if(!c)return '';const idx='SHCD'.indexOf(c.s)*13+(c.v===14?0:c.v-1);
- return `<div class="playing-face" role="img" aria-label="${cardLabel(c)}" style="--col:${idx%9};--row:${Math.floor(idx/9)}"></div>`;}
+ return `<div class="playing-face" role="img" aria-label="${cardLabel(c)}" style="--col:${idx%9};--row:${Math.floor(idx/9)}"><img class="deck" src="/cards.svg?v=2" alt=""></div>`;}
 function faceDownCards(r){return `<div class="playing-cards">${[0,1,2,3].map(i=>`<div class="playing-card ${r.cards[i]?'is-up':''}" style="animation-delay:${i*.09}s"><div class="playing-inner"><div class="playing-back" role="img" aria-label="Gesloten kaart"></div>${cardFace(r.cards[i])}</div></div>`).join('')}</div>`;}
 const CARD_ANSWERS={red:'Rood',black:'Zwart',higher:'Hoger',lower:'Lager',inside:'Binnen',outside:'Buiten',H:'Harten',D:'Ruiten',C:'Klaveren',S:'Schoppen'};
 function stageHint(stage){return ['Rood of zwart?','Is kaart 2 hoger of lager dan kaart 1?','Valt kaart 3 binnen of buiten de eerdere twee waarden?','Welke kaartsoort heeft kaart 4?'][stage];}
@@ -313,14 +338,17 @@ function unauthorized(){return `<div class="stage-card"><h1>🔒 Spelleiderlink 
 function viewScreen(){if(page==='home')return home();if(!state)return '<div class="loading">Verbinding maken…</div>';
  if(isHost&&!state.host_authorized)return shell(unauthorized());
  if(isPhone&&!state.me)return shell(joinScreen(),false);
- const mode=state.show?.mode||'setup';let content='';
+ if(page==='screen')return tvScreen();  // TV: Figma design (tv.js)
+ const mode=state.show?.mode||'setup';
+ return shell(legacyContent(),!isPhone && mode!=='grocery_alarm' && mode!=='grocery_study');}
+function legacyContent(){const mode=state.show?.mode||'setup';let content='';
  if(mode==='setup')content=setup();
  else if(mode==='wheel'||mode==='spinning')content=wheel();
  else if(mode==='game')content=gameScreen();
  else if(mode==='gift')content=giftScreen();
  else if(mode.startsWith('grocery_'))content=groceryScreen();
  else content=finished();
- return shell(content,!isPhone && mode!=='grocery_alarm' && mode!=='grocery_study');}
+ return content;}
 function renderHash(){const s=state,sh=s?.show,g=sh?.game,r=g?.current;
  if(!sh)return 'none';
  const seats=s?.players?.map(p=>[p.name,p.joined]);
@@ -345,7 +373,7 @@ function animateClassic(){const el=$('[data-classic="reveal"]');if(!el)return;
  requestAnimationFrame(()=>requestAnimationFrame(()=>{cols.forEach((c,i)=>c.style.setProperty('--slot',map[i]));
   setTimeout(()=>flip?.classList.add('revealed'),380);}));
 }
-function afterRender(){setCountdowns();if(state?.show?.mode==='game'&&game()?.phase==='reveal'&&game()?.category==='classic'){
+function afterRender(){setCountdowns();if(page==='screen'){tvAfterRender();return;}if(state?.show?.mode==='game'&&game()?.phase==='reveal'&&game()?.category==='classic'){
  const marker=`${game().category}-${game().index}-${game().phase}`;
  if(lastReveal!==marker){lastReveal=marker;animateClassic();}}
  if(isPhone && game()?.category==='quiz' && game()?.phase==='answer')initSuggestions();
@@ -380,7 +408,7 @@ async function refresh(force=false){if(refreshing)return;refreshing=true;
   const fileChosen=$('#csv-file')?.files?.length>0;  // a chosen file cannot be restored after re-render
   const h=renderHash();if(force||(h!==lastRender&&!fileChosen)){lastRender=h;renderApp();}
   if(page==='screen'){if(state.show?.mode==='grocery_alarm')sound();else stopAlarmSound();}
-  if(state.show?.mode==='spinning'&&isHost && !spinHandle){spinHandle=setTimeout(async()=>{spinHandle=null;try{await host('v2_open_game');await refresh(true);}catch(e){toast(e.message)}},6500);}
+  if(state.show?.mode==='spinning'&&isHost && !spinHandle){spinHandle=setTimeout(async()=>{spinHandle=null;try{await host('v2_open_game');await refresh(true);}catch(e){toast(e.message)}},8500);}
   if(state.show?.mode!=='spinning'&&spinHandle){clearTimeout(spinHandle);spinHandle=null;}
   setCountdowns();
  }catch(e){

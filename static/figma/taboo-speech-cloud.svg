@@ -1,0 +1,36 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="1660" height="828.294" viewBox="0 0 1660 828.294" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="VERBODEN WOORD / grote luxe spraakwolk en spreekverbod &#226;&#128;&#162; bewerkbaar" filter="url(#filter0_d_0_4)">
+<path id="Vector" d="M180 70H1445C1530 70 1591 133 1591 215V495C1591 590 1536 648 1428 648H1050L870 730L908 648H180C95 648 57 582 57 498V221C57 128 106 70 180 70Z" fill="#061020" stroke-width="20" stroke="#08091C"/>
+<path id="Vector_2" d="M180 68H1445C1530 68 1591 133 1591 215V495C1591 590 1536 648 1428 648H1050L870 730L908 648H180C95 648 57 582 57 498V221C57 128 106 68 180 68Z" fill="url(#paint0_linear_0_4)" stroke-width="13" stroke-linejoin="round" stroke="url(#paint1_linear_0_4)"/>
+<path id="Vector_3" d="M180 102H1445C1507 102 1556 151 1556 215V492" stroke-width="6" stroke-linecap="round" stroke="#FFE2A6" stroke-opacity="0.3"/>
+<path id="Vector_4" d="M193 610H1404" stroke-width="4" stroke-linecap="round" stroke="#E779AB" stroke-opacity="0.45"/>
+<path id="Vector_5" d="M162 230C120.667 313.333 121.667 401.667 165 495" stroke-width="10" stroke-linecap="round" stroke="#F2A766" stroke-opacity="0.22"/>
+<path id="Vector_6" opacity="0.92" d="M210 198C230 160 274 144 315 156L310 185C282 186 264 203 260 228H312V326H207V252C207 237 209 214 210 198Z" fill="#FFC76C"/>
+<path id="Vector_7" opacity="0.6" d="M342 198C362 160 406 144 447 156L442 185C414 186 396 203 392 228H444V326H339V252C339 237 341 214 342 198Z" fill="#FFC76C"/>
+<path id="Vector_8" d="M1372 348C1429.99 348 1477 300.99 1477 243C1477 185.01 1429.99 138 1372 138C1314.01 138 1267 185.01 1267 243C1267 300.99 1314.01 348 1372 348Z" fill="#790E33" stroke-width="13" stroke="#FF9AA4"/>
+<path id="Vector_9" d="M1319 213H1432C1449.33 213 1458 221.333 1458 238V274C1458 290 1449.33 298 1432 298H1404L1376 319V298H1319C1305.67 298 1299 290 1299 274V238C1299 221.333 1305.67 213 1319 213Z" stroke-width="10" stroke-linejoin="round" stroke="#FFE3A6"/>
+<path id="Vector_10" d="M1300 171L1443 315" stroke-width="17" stroke-linecap="round" stroke="#FF7785"/>
+<path id="Vector_11" d="M1298 173L1440 318" stroke-width="4" stroke-linecap="round" stroke="#FFD6A4"/>
+</g>
+<defs>
+<filter id="filter0_d_0_4" x="-40" y="-18" width="1756" height="856" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset dx="8" dy="30"/>
+<feGaussianBlur stdDeviation="24"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.49 0"/>
+<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_0_4"/>
+<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_0_4" result="shape"/>
+</filter>
+<linearGradient id="paint0_linear_0_4" x1="57" y1="68" x2="538.67" y2="1184.13" gradientUnits="userSpaceOnUse">
+<stop stop-color="#501025"/>
+<stop offset="0.5" stop-color="#2D1025"/>
+<stop offset="1" stop-color="#130F29"/>
+</linearGradient>
+<linearGradient id="paint1_linear_0_4" x1="57" y1="68" x2="538.67" y2="1184.13" gradientUnits="userSpaceOnUse">
+<stop stop-color="#FFE3A6"/>
+<stop offset="0.45" stop-color="#FFB76E"/>
+<stop offset="1" stop-color="#E6567C"/>
+</linearGradient>
+</defs>
+</svg>

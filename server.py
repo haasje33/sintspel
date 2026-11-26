@@ -8,6 +8,7 @@ the music library import and safe persistence in party-state.json.
 import json
 import os
 import random
+import re
 import secrets
 import socket
 import threading
@@ -37,10 +38,14 @@ CONTENT_TYPES = {
     '.js': 'text/javascript; charset=utf-8',
     '.css': 'text/css; charset=utf-8',
     '.svg': 'image/svg+xml',
+    '.woff2': 'font/woff2',
+    '.png': 'image/png',
 }
 STATIC_FILES = {'/': 'index.html', '/host': 'index.html', '/screen': 'index.html',
                 '/play': 'index.html', '/v2.js': 'v2.js', '/v2.css': 'v2.css',
-                '/cards.svg': 'cards.svg', '/card-back.svg': 'card-back.svg'}
+                '/cards.svg': 'cards.svg', '/card-back.svg': 'card-back.svg',
+                '/tv.js': 'tv.js', '/tv.css': 'tv.css', '/host.css': 'host.css'}
+ASSET_DIRS = ('figma', 'fonts')  # design artwork and the bundled Manrope font
 
 
 def init_state():
@@ -164,7 +169,7 @@ class Handler(BaseHTTPRequestHandler):
             self.send_error(404)
             return
         # Code always fresh; the large card artwork may be cached by the TV.
-        cache = 'private, max-age=86400' if path.suffix == '.svg' else 'no-store'
+        cache = 'private, max-age=86400' if path.suffix in ('.svg', '.woff2', '.png') else 'no-store'
         self.send_bytes(path.read_bytes(), CONTENT_TYPES.get(path.suffix, 'application/octet-stream'), cache=cache)
 
     def do_GET(self):
@@ -198,6 +203,11 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path in STATIC_FILES:
             self.serve_static(STATIC_FILES[path])
+            return
+        parts = path.strip('/').split('/')
+        if (len(parts) == 2 and parts[0] in ASSET_DIRS
+                and re.fullmatch(r'[a-z0-9][a-z0-9._-]*\.(svg|woff2|png)', parts[1])):
+            self.serve_static(parts[0] + '/' + parts[1])
             return
         if path == '/qr.png':
             target = q.get('url', [''])[0]

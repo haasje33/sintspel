@@ -1,0 +1,12 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="148" height="190" viewBox="0 0 148 190" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Rad / gouden aanwijzer">
+<path id="Vector" d="M7 7H141L74 181L7 7Z" fill="url(#paint0_linear_0_4)" stroke-width="7" stroke-linejoin="round" stroke="#FFDF88"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_0_4" x1="7" y1="7" x2="141" y2="7" gradientUnits="userSpaceOnUse">
+<stop stop-color="#AB6825"/>
+<stop offset="0.46" stop-color="#FFE4A1"/>
+<stop offset="1" stop-color="#B57B2D"/>
+</linearGradient>
+</defs>
+</svg>

@@ -1,0 +1,42 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="328.921" height="366.961" viewBox="0 0 328.921 366.961" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="WIE VAN DE 3 / vergrootglas &#226;&#128;&#162; bewerkbare vectoren" filter="url(#filter0_d_0_4)">
+<g id="Vector">
+<path d="M168.96 172.8L265.92 288.96Z" fill="black"/>
+<path d="M168.96 172.8L265.92 288.96" stroke-width="44" stroke-linecap="round" stroke="#693A21"/>
+</g>
+<g id="Vector_2">
+<path d="M168.96 172.8L265.92 288.96Z" fill="black"/>
+<path d="M168.96 172.8L265.92 288.96" stroke-width="31" stroke-linecap="round" stroke="url(#paint0_linear_0_4)"/>
+</g>
+<path id="Vector_3" d="M124.8 204.48C174.638 204.48 215.04 164.078 215.04 114.24C215.04 64.4018 174.638 24 124.8 24C74.9618 24 34.56 64.4018 34.56 114.24C34.56 164.078 74.9618 204.48 124.8 204.48Z" fill="url(#paint1_radial_0_4)" stroke-width="20" stroke="url(#paint2_linear_0_4)"/>
+<path id="Vector_4" d="M197.76 114.24C197.76 154.535 165.095 187.2 124.8 187.2C84.5053 187.2 51.84 154.535 51.84 114.24C51.84 73.9453 84.5053 41.28 124.8 41.28C165.095 41.28 197.76 73.9453 197.76 114.24Z" stroke-width="5" stroke="white" stroke-opacity="0.25"/>
+<path id="Vector_5" d="M66.24 84.48C79.68 59.52 101.76 46.4 132.48 45.12" stroke-width="10" stroke-linecap="round" stroke="white" stroke-opacity="0.32"/>
+</g>
+<defs>
+<filter id="filter0_d_0_4" x="-23" y="-8" width="371.2" height="380.8" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset dx="9" dy="24"/>
+<feGaussianBlur stdDeviation="16"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.47 0"/>
+<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_0_4"/>
+<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_0_4" result="shape"/>
+</filter>
+<linearGradient id="paint0_linear_0_4" x1="168.96" y1="172.8" x2="265.92" y2="172.8" gradientUnits="userSpaceOnUse">
+<stop stop-color="#99611C"/>
+<stop offset="0.35" stop-color="#FFE6A9"/>
+<stop offset="0.8" stop-color="#BD7C27"/>
+<stop offset="1" stop-color="#7F4715"/>
+</linearGradient>
+<radialGradient id="paint1_radial_0_4" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(124.8 114.24) scale(90.24 90.24)">
+<stop stop-color="#BFDDE5" stop-opacity="0.25"/>
+<stop offset="1" stop-color="#55ACBC" stop-opacity="0.08"/>
+</radialGradient>
+<linearGradient id="paint2_linear_0_4" x1="34.56" y1="24" x2="215.04" y2="24" gradientUnits="userSpaceOnUse">
+<stop stop-color="#99611C"/>
+<stop offset="0.35" stop-color="#FFE6A9"/>
+<stop offset="0.8" stop-color="#BD7C27"/>
+<stop offset="1" stop-color="#7F4715"/>
+</linearGradient>
+</defs>
+</svg>

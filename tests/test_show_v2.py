@@ -259,10 +259,12 @@ class ShowTests(unittest.TestCase):
     def test_wheel_result_is_hidden_until_spin_animation_ends(self):
         root=Path(__file__).resolve().parents[1]
         client=(root/'static'/'v2.js').read_text(encoding='utf-8')
-        style=(root/'static'/'v2.css').read_text(encoding='utf-8')
-        self.assertIn('wheel-result-pending',client)
-        self.assertIn('},6500);}',client)
-        self.assertIn('5.05s forwards',style)
+        tv=(root/'static'/'tv.js').read_text(encoding='utf-8')
+        style=(root/'static'/'tv.css').read_text(encoding='utf-8')
+        self.assertIn('tv-wheel-result',tv)
+        self.assertIn('tv-wheel-spin 5.6s',style)
+        self.assertIn('tv-pop .6s ease-out 5.6s',style)  # result shown only after the spin
+        self.assertIn('},8500);}',client)  # host opens the game after the result was visible
 
     def test_large_screen_layout_is_tv_only(self):
         root=Path(__file__).resolve().parents[1]
