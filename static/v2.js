@@ -131,7 +131,7 @@ function setup(){const sh=state.show;
   </div></div></div>`;
  }
  const cards=sh.hitster_cards||[];
- return `<div class="stage-card"><p class="eyebrow">🎛 Voorbereiding</p><h1>Klaar voor pakjesavond?</h1><p>Geef de vier spelers een naam. Wie een minigame wint, mag een cadeau uit de zak kiezen.</p>
+ return `<div class="stage-card"><p class="eyebrow">🎛 Voorbereiding</p><h1>Klaar voor pakjesavond?</h1><p>Geef de vier spelers een naam. Wie een minigame wint, mag een cadeau kiezen.</p>
 <form id="setup-form" class="config-form">${state.players.map((p,i)=>`<div class="config-row"><label>Speler ${i+1}<input class="text-input" name="name${i}" maxlength="28" value="${html(p.name)}" required></label></div>`).join('')}
 <div class="actions"><button type="submit" class="btn alt">💾 Instellingen opslaan</button>${button('v2_start','🎉 Start de spelshow','gold','type="button"')}</div></form>
 <div class="preflight"><h2>🕵️ Persoonlijke weetjes</h2><p>Voor Wie van de 3? moet iedere speler één waargebeurd weetje hebben ingevuld.</p>
@@ -295,16 +295,16 @@ function reviewScreen(g){const scores=Object.entries(g.scores).sort((a,b)=>b[1]-
    return `<details class="review-round"><summary>Vraag ${i+1}: ${g.category==='quiz'?html(r.song?.title||''):g.category==='taboo'?html(r.word||''):html(r.song?.title||'')}</summary>
    ${Object.entries(r.grades).map(([pid,grade])=>`<div class="review-row"><span><strong>${name(pid)}:</strong> ${html(grade.guess||grade.all_attempts?.join(', ')||'—')}</span><b class="${grade.accepted?'ok':'no'}">${grade.accepted?'Goed':'Fout'}</b>${button('v2_override',grade.accepted?'↩ Afkeuren':'✓ Goedkeuren',grade.accepted?'soft-btn':'alt',`data-round="${i}" data-player="${pid}" data-accepted="${grade.accepted?'false':'true'}"`)}</div>`).join('')}</details>`;
  }).join(''):'';
- return `<div class="stage-card review"><p class="eyebrow">🏆 Einduitslag · ${html(cat(g.category).name)}</p><h1>${!winners.length?'Geen winnaar deze keer':winners.length>1?'Meerdere winnaars!':'De winnaar is bekend!'}</h1>${winners.length?`<div class="winners">${winners.map(id=>`<div class="winner"><span>🏆</span><strong>${name(id)}</strong><small>${top} punten</small></div>`).join('')}</div><p class="subtle">${winners.length>1?'Iedere winnaar':'De winnaar'} mag een cadeau uit de zak kiezen.</p>`:'<p class="subtle">Niemand heeft punten gescoord, dus deze keer geen cadeau.</p>'}
+ return `<div class="stage-card review"><p class="eyebrow">🏆 Einduitslag · ${html(cat(g.category).name)}</p><h1>${!winners.length?'Geen winnaar deze keer':winners.length>1?'Meerdere winnaars!':'De winnaar is bekend!'}</h1>${winners.length?`<div class="winners">${winners.map(id=>`<div class="winner"><span>🏆</span><strong>${name(id)}</strong><small>${top} punten</small></div>`).join('')}</div><p class="subtle">${winners.map(id=>name(id)).join(' &amp; ')} ${winners.length>1?'mogen':'mag'} een cadeau kiezen.</p>`:'<p class="subtle">Niemand heeft punten gescoord, dus deze keer geen cadeau.</p>'}
  ${threeOwners(g)}
  <div class="score-table">${scores.map(([pid,n])=>`<div class="score-line"><span>${name(pid)}</span><b>${n} punten</b></div>`).join('')}</div>
  ${isHost?`<div class="host-review"><h2>Antwoorden controleren</h2><p class="subtle">Fout gerekende antwoorden kun je hier alsnog goedkeuren (of weer afkeuren).</p>${revisions||'<p>Geen handmatige tekstbeoordeling nodig.</p>'}${button('v2_confirm',winners.length?'✓ Uitslag bevestigen · cadeaus':'✓ Uitslag bevestigen · terug naar het rad','gold')}</div>`:'<p class="subtle">De spelleider bevestigt zo de uitslag.</p>'}</div>`;
 }
 function giftScreen(){const g=state.show.gift;if(!g)return `<div class="stage-card">Even geduld…</div>`;
  const many=g.winners.length>1;
- return `<div class="stage-card gift-stage"><p class="eyebrow">🎁 Cadeautijd</p><h1>${many?'De winnaars kiezen een cadeau!':'Kies een cadeau!'}</h1><div class="prize-icons"><span>🎁</span></div>
+ return `<div class="stage-card gift-stage"><p class="eyebrow">🎁 Cadeautijd</p><h1>Cadeautijd!</h1><div class="prize-icons"><span>🎁</span></div>
  <div class="gift-winners">${g.winners.map(pid=>`<div class="winner-display">${name(pid)}</div>`).join('')}</div>
- <p>${many?'Iedere winnaar':'De winnaar'} pakt een cadeau uit de zak: voor zichzelf of voor een ander.</p>
+ <p>${many?'mogen':'mag'} een cadeau kiezen.</p>
  ${isHost?button('v2_gift_done','Verder →','gold'):''}</div>`;}
 const alarmSvg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18v-6a5 5 0 0 1 10 0v6"/><path d="M5 21h14"/><path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="M2 12h2"/><path d="m19.07 4.93-1.41 1.41"/><path d="M20 12h2"/><path d="M4 18h16"/></svg>';
 function groceryScreen(){const gr=state.show.grocery,mode=state.show.mode;

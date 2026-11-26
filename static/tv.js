@@ -145,9 +145,9 @@ function tvWinners(g){const scores=g.scores||{},top=Math.max(0,...Object.values(
   <div class="tv-abs tv-win-game">${html(up(cat(g.category).name))}</div>${tvStatus(line)}`,{title:'De winnaars',titleLine:396});}
 function tvGift(){const g=state.show.gift||{winners:[]},names=namesLine(g.winners),many=g.winners.length>1;
  const rings=[[1020.75,724],[1032.72,742],[1048.7,760],[1063.31,778]].map(([x,y],i)=>ring('gift-spot-ring-'+i,x,y)).join('');
- const t=`${names} ${many?'KIEZEN':'KIEST'}`;
+ const t=names;
  return tvFrame(`<div class="tv-abs tv-gift-name" style="font-size:${fitSize(t,145,24)}px">${html(t)}</div>
-  <div class="tv-abs tv-gift-sub">${many?'IEDER EEN CADEAU UIT DE ZAK':'EEN CADEAU UIT DE ZAK'}</div>
+  <div class="tv-abs tv-gift-sub">${many?'MOGEN EEN CADEAU KIEZEN':'MAG EEN CADEAU KIEZEN'}</div>
   ${rings}<img class="tv-abs" src="${FIG}gift-present.svg" alt="" style="left:1052.31px;top:746px">`,{title:'Cadeautijd!',titleLine:374});}
 function tvFinale(){const rings=[[990,804],[1019,833],[1048,862],[1077,891],[1106,920]].map(([x,y],i)=>ring('finale-light-ring-'+i,x,y)).join('');
  return tvFrame(`<div class="tv-abs tv-finale1">DE KERSTBOOM</div><div class="tv-abs tv-finale2">MAG VAN ZOLDER!</div>

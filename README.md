@@ -42,7 +42,7 @@ Dit spel staat **niet op het rad**. Bij de overgang naar spel twee of drie gaat 
 Het blijft gezellig en ongedwongen: de app houdt **niet** bij wie hoeveel cadeaus heeft of hoe vaak iemand won.
 
 - De speler(s) met de hoogste score van een minigame hebben gewonnen. Bij een gelijke hoogste score winnen ze allemaal (bijvoorbeeld drie spelers met 3 punten en één met 2: de drie met 3 punten winnen). Scoort iedereen 0 punten, dan wint niemand.
-- Iedere winnaar mag **één cadeau** uit de zak kiezen, voor zichzelf of voor een ander.
+- De winnaar(s) mogen een cadeau kiezen.
 - Bij **Avond afsluiten** volgt eerst nog de herinnerronde van het boodschappenspel als die open staat; daarna verschijnt het slotscherm. Met **Toch verder spelen** ga je terug naar het rad.
 
 ## Muziekkaarten toevoegen
