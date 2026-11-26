@@ -168,7 +168,7 @@ def new_show():
             'game':None,'spin':None,'spin_turn':0,'disabled_games':[],'grocery':{'phase':'pending','items':[],
             'first_after':RNG.choice([1,2]),'recall_after':None,'deadline':None,
             'responses':{},'review':{}},
-            'regular_completed':0,'gifts_given':0,'gift':None,'last_gift':None,
+            'regular_completed':0,'gift':None,'finish_requested':False,
             'stories':{},'used_stories':{},'aliases':{},'round_history':[],'started_at':None,'category_turn':0}
 
 
@@ -181,8 +181,10 @@ def ensure(s):
     sh.setdefault('spin_turn',0)  # Existing saved evenings predate phone wheel turns.
     sh.setdefault('disabled_games',[])
     sh.setdefault('used_stories',{})
-    if sh.get('last_gift') and 'show' not in sh['last_gift']:
-        sh['last_gift']=None  # undo snapshot from an older version
+    sh.setdefault('finish_requested',False)
+    for old in ('last_gift','gifts_given'):sh.pop(old,None)  # retired gift bookkeeping
+    if sh.get('gift') and 'winner_index' in sh['gift']:
+        sh['gift']={k:sh['gift'][k] for k in ('winners','category','scores') if k in sh['gift']}
     return sh
 
 
@@ -248,15 +250,6 @@ def load_packaged_library(s,path):
 
 def player(s,pid):return next((p for p in s['players'] if p['id']==pid),None)
 def player_ids(s):return [p['id'] for p in s['players']]
-def all_done(s):return all(p['received']>=p['target'] for p in s['players'])
-def remaining(s):return sum(max(0,p['target']-p['received']) for p in s['players'])
-
-
-def available(s,exclude=None):
-    options=[p for p in s['players'] if p['received']<p['target'] and p['id']!=exclude]
-    if not options:return []
-    low=min(p['received'] for p in options)
-    return [p['id'] for p in options if p['received']==low]
 
 
 def choose_hidden(s,cards):
@@ -330,7 +323,7 @@ def make_round(s,cat,i=0,game=None):
                 'story':ensure(s)['stories'][owner],'questions_used':0,'guess':None,
                 'answer':{},'grades':{},'points':{},'revealed':False}
     if cat=='pong':
-        return {'order':RNG.sample(ids,len(ids)),'turn':0,'throws':PONG_THROWS,
+        return {'order':RNG.sample(ids,len(ids)),'throws':PONG_THROWS,
                 'answer':{},'grades':{},'points':{},'revealed':False}
     if cat=='dice':
         kind=game['round_types'][i]
@@ -502,45 +495,38 @@ def winners_of(scores):
 
 
 def gift_start(s,winners,category,scores=None):
-    """Each winner takes one gift: their own, or one for another player once
-    their own gifts are complete. Players with the fewest gifts choose first, so
-    a scarce last gift does not depend on seat order."""
+    """Winners may each pick a gift from the bag; nothing else is tracked."""
     sh=ensure(s)
-    order=sorted(winners,key=lambda pid:(player(s,pid)['received'],RNG.random()))
-    sh['gift']={'winners':order,'winner_index':0,
-                'category':category,'awarded':[],'scores':copy.deepcopy(scores or {})}
-    sh['last_gift']=None  # Undo must never apply to the preceding game.
     sh['game']=None
-    sh['mode']='gift'
-    gift_next(s)
+    sh['gift']={'winners':list(winners),'category':category,'scores':copy.deepcopy(scores or {})}
+    if winners:sh['mode']='gift'
+    else:finish_round(s)
+
+
+def finish_round(s):
+    sh=ensure(s);gift=sh.get('gift') or {}
+    category=gift.get('category')
+    sh['round_history'].append({'category':category,'winners':gift.get('winners',[]),
+                                'points':gift.get('scores',{}),'at':time.time()})
+    if category not in ('grocery','pong',None):sh['regular_completed']+=1
+    sh['gift']=None
+    trigger_transition(s)
 
 
 def trigger_transition(s):
     sh=ensure(s);gr=sh['grocery']
-    if all_done(s):
+    if sh['finish_requested']:
+        # Before the finale, the memorised shopping list still gets its recall.
+        if gr['phase']=='waiting':
+            gr['phase']='alarm_recall';sh['mode']='grocery_alarm';return
         sh['mode']='finished';return
     if gr['phase']=='pending' and sh['regular_completed']>=gr['first_after']:
         gr['phase']='alarm_intro';gr['items']=RNG.sample(GROCERIES,20)
         gr['recall_after']=sh['regular_completed']+RNG.randint(2,4)
         sh['mode']='grocery_alarm';return
-    if gr['phase']=='waiting' and (sh['regular_completed']>=gr['recall_after'] or remaining(s)<=6):
+    if gr['phase']=='waiting' and sh['regular_completed']>=gr['recall_after']:
         gr['phase']='alarm_recall';sh['mode']='grocery_alarm';return
     sh['mode']='wheel'
-
-
-def gift_next(s):
-    sh=ensure(s);gift=sh['gift']
-    if not gift:return
-    # Skip winners who have nobody left to give a gift to.
-    while gift['winner_index']<len(gift['winners']) and remaining(s)>0 and gift_requirement(s) is None:
-        gift['winner_index']+=1
-    if gift['winner_index']>=len(gift['winners']) or remaining(s)<=0:
-        category=gift['category']
-        sh['round_history'].append({'category':category,'winners':gift['winners'],
-                                    'points':gift.get('scores',{}),'at':time.time()})
-        if category!='grocery':sh['regular_completed']+=1
-        sh['gift']=None
-        trigger_transition(s)
 
 
 def return_to_wheel(s, disabled=False):
@@ -569,10 +555,9 @@ def return_to_wheel(s, disabled=False):
     elif mode=='gift':
         gift=sh.get('gift')
         if gift:
-            category=gift['category']
-            sh['round_history'].append({'category':category,'winners':gift['winners'],
-                       'points':gift.get('scores',{}),'at':time.time(),'gifts_skipped':True})
-            if category!='grocery':sh['regular_completed']+=1
+            sh['round_history'].append({'category':gift['category'],'winners':gift['winners'],
+                       'points':gift.get('scores',{}),'at':time.time()})
+            if gift['category'] not in ('grocery','pong'):sh['regular_completed']+=1
     elif mode.startswith('grocery_'):
         gr=sh['grocery']
         # A broken surprise must never trap the evening or retrigger endlessly.
@@ -583,25 +568,8 @@ def return_to_wheel(s, disabled=False):
     sh['game']=None
     sh['spin']=None
     sh['gift']=None
-    sh['last_gift']=None
-    sh['mode']='finished' if all_done(s) else 'wheel'
+    sh['mode']='wheel'
     return {'returned':True,'mode':sh['mode'],'previous_mode':mode}
-
-
-def gift_requirement(s):
-    sh=ensure(s);gift=sh.get('gift')
-    if not gift or remaining(s)<=0:return None
-    if gift['winner_index']>=len(gift['winners']):return None
-    winner=gift['winners'][gift['winner_index']]
-    p=player(s,winner)
-    if p and p['received']<p['target']:
-        return {'winner':winner,'kind':'self','eligible':[winner]}
-    options=available(s,exclude=winner)
-    if not options:return None
-    return {'winner':winner,'kind':'other','eligible':options}
-
-
-UNDO_MODES=('gift','wheel','finished','grocery_alarm')
 
 
 def retire_stories(s):
@@ -627,17 +595,12 @@ def admin(s,payload,save):
         if sh['mode']!='setup':raise ValueError('Instellen kan alleen vóór de spelshow.')
         entries=payload.get('players',[])
         if len(entries)!=4:raise ValueError('Vul vier spelers in.')
-        names=[];counts=[]
-        for item in entries:
-            name=str(item.get('name','')).strip()[:28]
-            try:count=int(item.get('target',9))
-            except (TypeError,ValueError):count=0
-            if not name or not 1<=count<=99:raise ValueError('Geef vier namen en een aantal cadeaus van 1 tot 99.')
-            names.append(name);counts.append(count)
+        names=[str((item or {}).get('name','')).strip()[:28] for item in entries]
+        if not all(names):raise ValueError('Geef alle vier de spelers een naam.')
         if len({norm(x) for x in names})!=4:raise ValueError('Namen moeten verschillend zijn.')
         # Validate everything first, so a rejected form never half-applies.
-        for p,name,count in zip(s['players'],names,counts):
-            p['name']=name;p['target']=count
+        for p,name in zip(s['players'],names):
+            p['name']=name
         return done({'configured':True})
     if act=='v2_story':
         if sh['mode'] not in ('setup','wheel'):raise ValueError('Voer persoonlijke weetjes vóór het spel in.')
@@ -648,10 +611,6 @@ def admin(s,payload,save):
     if act=='v2_start':
         if sh['mode']!='setup':raise ValueError('Spelshow is al begonnen.')
         sh['started_at']=time.time()
-        for p in s['players']:
-            if p['target']==0:p['target']=9
-            p['received']=0;p['wins']=0
-        sh['gifts_given']=0
         sh['spin_turn']=0
         sh['disabled_games']=[]
         sh['mode']='wheel'
@@ -681,7 +640,6 @@ def admin(s,payload,save):
         sh['spin']={'category':chosen,'options':before_bag,'at':time.time(),
                     'turn_before':old_turn}
         if act=='v2_spin':sh['spin_turn']+=1
-        sh['last_gift']=None
         sh['mode']='spinning' if act=='v2_spin' else 'game'
         return done({'category':chosen})
     if act=='v2_open_game':
@@ -740,19 +698,13 @@ def admin(s,payload,save):
         if r['questions_used']>=10:raise ValueError('De tien vragen zijn gebruikt.')
         r['questions_used']+=1
         return done({'count':r['questions_used']})
-    if act=='v2_pong_next':
-        g,r=current(sh)
-        if sh['mode']!='game' or g['category']!='pong' or g['phase']!='play':raise ValueError('Geen Pepernotenpong bezig.')
-        r['turn']+=1
-        if r['turn']>=len(r['order']):g['phase']='done'
-        return done({'turn':r['turn']})
     if act=='v2_pong_finish':
         g,r=current(sh)
         if sh['mode']!='game' or g['category']!='pong':raise ValueError('Geen Pepernotenpong bezig.')
         # The cup gifts are separate small gifts; the gift bag is untouched.
-        sh['round_history'].append({'category':'pong','winners':[],'points':{},'at':time.time()})
         sh['game']=None;sh['spin']=None
-        trigger_transition(s)
+        sh['gift']={'winners':[],'category':'pong','scores':{}}
+        finish_round(s)
         return done({'mode':sh['mode']})
     if act=='v2_release_seat':
         p=player(s,str(payload.get('player','')))
@@ -834,43 +786,26 @@ def admin(s,payload,save):
         g,r=current(sh)
         if sh['mode']!='game' or g['phase']!='review':raise ValueError('Bevestig na de laatste vraag.')
         winners=winners_of(g['scores'])
-        for pid in winners:player(s,pid)['wins']+=1
         if g['category']=='three':retire_stories(s)
         gift_start(s,winners,g['category'],g['scores'])
         return done({'winners':winners})
-    if act=='v2_give':
-        if sh['mode']!='gift':raise ValueError('Geen cadeau-uitdeling bezig.')
-        requirement=gift_requirement(s)
-        if requirement is None:raise ValueError('Geen cadeaus meer over.')
-        pid=payload.get('recipient','')
-        if pid not in requirement['eligible']:raise ValueError('Kies een toegestane ontvanger.')
-        # A full snapshot lets the host undo even the gift that ended this
-        # gift phase (and possibly triggered an alarm or the finale).
-        snapshot=copy.deepcopy({k:v for k,v in sh.items() if k!='last_gift'})
-        sh['last_gift']={'show':snapshot,'players':[p['received'] for p in s['players']],
-                         'history_len':len(s.get('history',[]))}
-        p=player(s,pid);p['received']+=1
-        sh['gifts_given']+=1
-        sh['gift']['awarded'].append({'winner':requirement['winner'],'recipient':pid})
-        s.setdefault('history',[]).append({'type':'gift','winner':requirement['winner'],
-                                           'recipient':pid,'category':sh['gift']['category'],'at':time.time()})
-        sh['gift']['winner_index']+=1
-        gift_next(s)
-        return done({'recipient':pid,'remaining':remaining(s)})
-    if act=='v2_undo_gift':
-        backup=sh.get('last_gift')
-        if not backup:raise ValueError('Geen cadeau om terug te draaien.')
-        if sh['mode'] not in UNDO_MODES:raise ValueError('Terugdraaien kan alleen direct na een cadeau.')
-        for p,count in zip(s['players'],backup['players']):p['received']=count
-        restored=copy.deepcopy(backup['show'])
-        restored['last_gift']=None
-        sh.clear();sh.update(restored)  # in place: keep references to the show valid
-        del s['history'][backup['history_len']:]
-        return done({'undone':True})
+    if act=='v2_gift_done':
+        if sh['mode']!='gift':raise ValueError('Er worden nu geen cadeaus gekozen.')
+        finish_round(s)
+        return done({'mode':sh['mode']})
+    if act=='v2_finish':
+        if sh['mode']!='wheel':raise ValueError('Sluit de avond af vanaf het rad.')
+        sh['finish_requested']=True
+        trigger_transition(s)
+        return done({'mode':sh['mode']})
+    if act=='v2_resume':
+        if sh['mode']!='finished':raise ValueError('De spelavond loopt nog.')
+        sh['finish_requested']=False
+        sh['mode']='wheel'
+        return done({'mode':'wheel'})
     if act=='v2_grocery_show':
         gr=sh['grocery']
         if sh['mode']!='grocery_alarm':raise ValueError('Geen alarm actief.')
-        sh['last_gift']=None
         if gr['phase']=='alarm_intro':
             gr['phase']='study';gr['deadline']=time.time()+60
             sh['mode']='grocery_study'
@@ -904,19 +839,18 @@ def admin(s,payload,save):
         if sh['mode']!='grocery_review':raise ValueError('De uitslag is nog niet klaar.')
         scores={pid:gr['score'] for pid,gr in sh['grocery']['review'].items()}
         winners=winners_of(scores)
-        for pid in winners:player(s,pid)['wins']+=1
         sh['grocery']['phase']='complete'
         gift_start(s,winners,'grocery',scores)
         return done({'winners':winners})
     if act=='v2_reset':
         if str(payload.get('confirmation',''))!='RESET':raise ValueError('Typ RESET om opnieuw te beginnen.')
         # A new evening: fresh stories and phone seats, but keep names,
-        # gift targets, the music library and remembered answer aliases.
+        # the music library and remembered answer aliases.
         saved_aliases=copy.deepcopy(sh.get('aliases',{}))
         s['show2']=new_show()
         s['show2']['aliases']=saved_aliases
         for p in s['players']:
-            p['received']=0;p['wins']=0;p['token']=None
+            p['token']=None
         s['history']=[]
         return done({'reset':True})
     raise ValueError('Onbekende spelshowactie.')
@@ -1034,7 +968,7 @@ def masked_round(s,g,r,is_admin,pid):
     cat=g['category'];phase=g['phase'];out={}
     always=('chooser','ref','level','era','question_type','boundary','prompt','investigator',
             'story','questions_used','rule','target','stage','alive','started_at','deadline','performer',
-            'order','turn','throws')
+            'order','throws')
     for k in always:
         if k in r:out[k]=copy.deepcopy(r[k])
     if cat=='three' and phase!='review':
@@ -1090,11 +1024,10 @@ def view(s,is_admin=False,pid=None):
                    'enabled_games':[g['id'] for g in GAMES if g['id'] not in sh['disabled_games']],
                    'spin_player':player_ids(s)[sh['spin_turn']%len(player_ids(s))] if player_ids(s) else None,
                    'regular_completed':sh['regular_completed'],
-                   'gifts_given':sh['gifts_given'],'remaining_gifts':remaining(s),
+                   'finish_requested':sh['finish_requested'],
                    'has_story':{p['id']:bool(sh['stories'].get(p['id'])) for p in s['players']},
                    'stories_needed':'three' not in sh['disabled_games'] and bool(stories_missing(s)),
                    'stories_used':bool(sh['used_stories']),
-                   'can_undo_gift':bool(sh.get('last_gift')) and sh['mode'] in UNDO_MODES,
                    'server_time':time.time(),
                    'game':None,'grocery':None,'gift':None}
     if sh.get('game'):
@@ -1115,11 +1048,7 @@ def view(s,is_admin=False,pid=None):
             v['grocery']['review']=copy.deepcopy(gr['review'])  # shown on the TV as the result
         if pid:v['grocery']['my_response']=gr['responses'].get(pid,[])
     if sh['mode']=='gift' and sh['gift']:
-        gift=sh['gift'];need=gift_requirement(s)
-        v['gift']={'winners':gift['winners'],'winner_index':gift['winner_index'],
-                   'awarded':gift['awarded'],
-                   'category':gift['category'],'scores':gift.get('scores',{}),
-                   'requirement':need}
+        v['gift']=copy.deepcopy(sh['gift'])
     if is_admin:
         v['stories']=copy.deepcopy(sh['stories']) if sh['mode'] in ('setup','wheel') else {}
         v['hitster_count']=len(s.get('hitster_cards',[]))

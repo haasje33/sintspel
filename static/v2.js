@@ -63,10 +63,9 @@ function sound(){
 function decorate(){return `<div class="decor star-one">✦</div><div class="decor star-two">✦</div><div class="decor star-three">✦</div>`;}
 function header(){return `<header class="topbar ${isHost?'host-topbar':''}"><div class="brand"><span class="brand-signet">🎁</span><div><b>DE GROTE</b><strong>SINTERKLAAS SPELLENAVOND</strong></div></div>
 <div class="head-right"><span class="head-label">${page==='host'?'🎛 Spelleider':page==='screen'?'📺 Spelshow':'📱 Speler'}</span><span class="roomcode">CODE ${html(state.room)}</span>${page==='screen'?`<button class="sound-toggle" data-enable-sound aria-pressed="${audioEnabled}">${audioEnabled?'🔊 Geluid aan':'🔈 Geluid aanzetten'}</button>`:''}</div></header>`;}
-function scoreboard(){const show=state.show;return `<aside class="sidebar">
-<h3>🎁 De cadeauzak</h3><div class="gift-progress"><div class="gift-fill" style="width:${Math.max(0,100-100*show.remaining_gifts/Math.max(1,state.players.reduce((t,p)=>t+p.target,0)))}%"></div></div>
-<p class="small subtle">${show.remaining_gifts} cadeaus te gaan · ${show.gifts_given} uitgedeeld</p>
-${state.players.map((p,i)=>`<div class="player-row"><div class="avatar">${['👑','🎄','⭐','🔔'][i]}</div><div class="player-details"><strong>${html(p.name)}</strong><small>${p.wins}× gewonnen</small></div><div class="player-gifts"><b>${p.received}/${p.target}</b><small>cadeaus</small></div>${isHost?`<div class="seat-status">${p.joined?`📱 verbonden ${button('v2_release_seat','Ontkoppel','link-btn',`data-value="${p.id}"`)}`:'📵 geen telefoon'}</div>`:''}</div>`).join('')}
+function scoreboard(){return `<aside class="sidebar">
+<h3>🎄 De spelers</h3>
+${state.players.map((p,i)=>`<div class="player-row"><div class="avatar">${['👑','🎄','⭐','🔔'][i]}</div><div class="player-details"><strong>${html(p.name)}</strong>${isHost?`<small>${p.joined?`📱 verbonden · ${button('v2_release_seat','Ontkoppel','link-btn',`data-value="${p.id}"`)}`:'📵 geen telefoon'}</small>`:''}</div></div>`).join('')}
 ${isHost?`<div class="side-tools"><button class="soft" data-act="v2_reset">↺ Nieuwe spelavond</button><a class="soft" href="/screen" target="_blank" rel="noopener">📺 TV-scherm</a></div>`:''}
 </aside>`;}
 function tvJoinMini(){
@@ -107,8 +106,8 @@ function setup(){const sh=state.show;
   </div></div></div>`;
  }
  const cards=sh.hitster_cards||[];
- return `<div class="stage-card"><p class="eyebrow">🎛 Voorbereiding</p><h1>Klaar voor pakjesavond?</h1><p>Geef de vier spelers een naam en stel het aantal cadeaus per speler in.</p>
-<form id="setup-form" class="config-form">${state.players.map((p,i)=>`<div class="config-row"><label>Speler ${i+1}<input class="text-input" name="name${i}" maxlength="28" value="${html(p.name)}" required></label><label>Cadeaus<input class="text-input" name="target${i}" type="number" min="1" max="99" value="${p.target||9}" required></label></div>`).join('')}
+ return `<div class="stage-card"><p class="eyebrow">🎛 Voorbereiding</p><h1>Klaar voor pakjesavond?</h1><p>Geef de vier spelers een naam. Wie een minigame wint, mag een cadeau uit de zak kiezen.</p>
+<form id="setup-form" class="config-form">${state.players.map((p,i)=>`<div class="config-row"><label>Speler ${i+1}<input class="text-input" name="name${i}" maxlength="28" value="${html(p.name)}" required></label></div>`).join('')}
 <div class="actions"><button type="submit" class="btn alt">💾 Instellingen opslaan</button>${button('v2_start','🎉 Start de spelshow','gold','type="button"')}</div></form>
 <div class="preflight"><h2>🕵️ Persoonlijke weetjes</h2><p>Voor Wie van de 3? moet iedere speler één waargebeurd weetje hebben ingevuld.</p>
 ${state.players.map(p=>`<div class="check-row"><span>${name(p.id)}</span><strong>${sh.has_story[p.id]?'✅ Ontvangen':'⏳ Nog niet ingevuld'}</strong></div>`).join('')}
@@ -129,12 +128,12 @@ function wheel(){const sh=state.show,spinning=sh.mode==='spinning',bag=spinning&
  ${spinning?`<h2 class="result-banner wheel-result-pending">${cat(sh.spin.category).icon} ${html(cat(sh.spin.category).name)}</h2>`:`<p class="subtle">Iedere minigame verdwijnt na het spelen van het rad, tot alle ${sh.enabled_games.length} spellen geweest zijn.</p><p class="wheel-turn">🎡 <strong>${spinnerName}</strong> is aan de beurt om te draaien.</p>`}
  ${isPhone&&!spinning&&sh.stories_needed&&!sh.has_story[state.me]?storyForm(sh.stories_used):''}
  ${!isPhone&&!spinning&&sh.stories_needed?`<div class="message">🕵️ Wie van de 3? wacht op ${sh.stories_used?'nieuwe ':''}weetjes van: ${state.players.filter(p=>!sh.has_story[p.id]).map(p=>html(p.name)).join(', ')}. Tot die er zijn, slaat het rad dit spel over.</div>${isHost?`<details class="game-manager"><summary>✍ Weetje invoeren namens een speler</summary>${hostStoryForm()}</details>`:''}`:''}
- ${isHost&&!spinning&&sh.can_undo_gift?button('v2_undo_gift','↩ Laatste cadeau terugdraaien','soft-btn'):''}
  ${isPhone?(spinning?'<p class="waiting">Het rad draait! Kijk naar de TV.</p>':bag.length===0?'<p class="waiting">De spelleider schakelt een spel in…</p>':state.me===spinner?button('v2_spin','🎡 Geef het rad een slinger!','gold wheel-phone-spin'):`<p class="waiting">Wacht op ${spinnerName}…</p>`):''}
  ${isHost?(spinning?button('v2_open_game','✨ Start het gekozen spel','gold'):bag.length?button('v2_spin',`🎡 Draai namens ${spinnerName}`,'gold'):''):''}
  ${isHost&&!spinning?`<div class="test-picker"><span>Rechtstreeks testen:</span><select id="quick-game" class="text-input">${bag.map(id=>`<option value="${id}">${cat(id).icon} ${html(cat(id).name)}</option>`).join('')}</select>${bag.length?button('v2_direct','Start gekozen spel','alt'):''}</div>`:''}
  ${isHost&&!spinning?`<details class="game-manager"><summary>⚙ Spellen beheren (bij problemen)</summary>
  ${sh.enabled_games.length?`<div class="game-management-row"><select id="disable-select" class="text-input">${sh.enabled_games.map(id=>`<option value="${id}">${cat(id).name}</option>`).join('')}</select>${button('v2_disable_game','⛔ Uit het rad halen','soft-btn')}</div>`:''}
+ <div class="game-management-row">${button('v2_finish','🏁 Spelavond afsluiten','soft-btn')}</div>
  ${sh.disabled_games?.length?`<div class="game-management-row"><select id="enable-select" class="text-input">${sh.disabled_games.map(id=>`<option value="${id}">${cat(id).name}</option>`).join('')}</select>${button('v2_enable_game','↶ Opnieuw inschakelen','alt')}</div>`:'<p class="subtle">Alle spellen zijn momenteel ingeschakeld.</p>'}</details>`:''}
  </div>`;}
 function topGame(g){return `<div class="game-head"><p class="eyebrow">${cat(g.category).icon} ${html(cat(g.category).name)}</p>${pill('Vraag '+(g.index+1)+' / '+g.total)}${pill(g.phase==='review'?'Einduitslag':g.phase==='reveal'?'Antwoord':'Speelronde')}</div>`;}
@@ -247,15 +246,13 @@ function phoneGame(g){const r=round(),cid=g.category;
  }
  return `<div class="stage-card phone-stage">${topGame(g)}<h1>${cat(cid).name}</h1>${content}</div>`;
 }
-function pongScreen(g){const r=round(),order=r.order||[],turn=r.turn||0,done=g.phase==='done';
- const current=order[turn];
- const list=`<ol class="pong-order">${order.map((pid,i)=>`<li class="${i<turn?'done':i===turn&&!done?'active':''}"><span>${i<turn?'✓':i===turn&&!done?'🍪':i+1}</span>${name(pid)}</li>`).join('')}</ol>`;
+function pongScreen(g){const r=round(),order=r.order||[];
+ const list=`<ol class="pong-order">${order.map((pid,i)=>`<li><span>${i+1}</span>${name(pid)}</li>`).join('')}</ol>`;
  const head=`<p class="eyebrow">🍪 Intermezzo</p><h1>Pepernotenpong!</h1>`;
- if(isPhone)return `<div class="stage-card phone-stage">${head}${done?'<div class="waiting">Iedereen heeft gegooid. Pak je cadeautjes!</div>':current===state.me?`<div class="message">🎯 Jij bent aan de beurt! Gooi ${r.throws} pepernoten.</div>`:`<div class="waiting">${name(current)} gooit nu. Kijk mee!</div>`}${list}</div>`;
- return `<div class="stage-card pong-stage">${head}
- <p class="pong-rules">Om de beurt gooit iedereen <b>${r.throws} pepernoten</b> naar de bekertjes. <b>Raak?</b> Til het bekertje op: het cadeautje eronder is voor jou.</p>
- <div class="pong-now">${done?'🎉 Iedereen heeft gegooid!':`🎯 <b>${name(current)}</b> is aan de beurt`}</div>${list}
- ${isHost?`<div class="host-controls">${done?button('v2_pong_finish','✓ Klaar · terug naar het rad','gold'):button('v2_pong_next',turn+1<order.length?'Volgende gooier →':'Laatste beurt klaar ✓','gold')+button('v2_pong_finish','Intermezzo afsluiten','soft-btn')}${button('v2_cancel','↩ Annuleer','soft-btn')}</div>`:''}</div>`;}
+ const rules=`<p class="pong-rules">Om de beurt gooit iedereen <b>${r.throws} pepernoten</b> naar de bekertjes, in deze volgorde. <b>Raak?</b> Til het bekertje op: het cadeautje eronder is voor jou.</p>`;
+ if(isPhone)return `<div class="stage-card phone-stage pong-stage">${head}${rules}${list}<div class="waiting">Kijk naar de TV en gooi als je aan de beurt bent.</div></div>`;
+ return `<div class="stage-card pong-stage">${head}${rules}${list}
+ ${isHost?`<div class="host-controls">${button('v2_pong_finish','✓ Klaar · terug naar het rad','gold')}${button('v2_cancel','↩ Annuleer','soft-btn')}</div>`:''}</div>`;}
 function gameScreen(){const g=game();if(!g)return `<div class="stage-card">Spel wordt gestart…</div>`;
  if(g.category==='pong')return pongScreen(g);
  if(isPhone)return phoneGame(g);
@@ -273,19 +270,17 @@ function reviewScreen(g){const scores=Object.entries(g.scores).sort((a,b)=>b[1]-
    return `<details class="review-round"><summary>Vraag ${i+1}: ${g.category==='quiz'?html(r.song?.title||''):g.category==='taboo'?html(r.word||''):html(r.song?.title||'')}</summary>
    ${Object.entries(r.grades).map(([pid,grade])=>`<div class="review-row"><span><strong>${name(pid)}:</strong> ${html(grade.guess||grade.all_attempts?.join(', ')||'—')}</span><b class="${grade.accepted?'ok':'no'}">${grade.accepted?'Goed':'Fout'}</b>${button('v2_override',grade.accepted?'↩ Afkeuren':'✓ Goedkeuren',grade.accepted?'soft-btn':'alt',`data-round="${i}" data-player="${pid}" data-accepted="${grade.accepted?'false':'true'}"`)}</div>`).join('')}</details>`;
  }).join(''):'';
- return `<div class="stage-card review"><p class="eyebrow">🏆 Einduitslag · ${html(cat(g.category).name)}</p><h1>${!winners.length?'Geen winnaar deze keer':winners.length>1?'Meerdere winnaars!':'De winnaar is bekend!'}</h1>${winners.length?`<div class="winners">${winners.map(id=>`<div class="winner"><span>🏆</span><strong>${name(id)}</strong><small>${top} punten</small></div>`).join('')}</div><p class="subtle">${winners.length>1?'Iedere winnaar':'De winnaar'} mag één cadeau uit de zak kiezen.</p>`:'<p class="subtle">Niemand heeft punten gescoord, dus er gaat geen cadeau uit de zak.</p>'}
+ return `<div class="stage-card review"><p class="eyebrow">🏆 Einduitslag · ${html(cat(g.category).name)}</p><h1>${!winners.length?'Geen winnaar deze keer':winners.length>1?'Meerdere winnaars!':'De winnaar is bekend!'}</h1>${winners.length?`<div class="winners">${winners.map(id=>`<div class="winner"><span>🏆</span><strong>${name(id)}</strong><small>${top} punten</small></div>`).join('')}</div><p class="subtle">${winners.length>1?'Iedere winnaar':'De winnaar'} mag een cadeau uit de zak kiezen.</p>`:'<p class="subtle">Niemand heeft punten gescoord, dus deze keer geen cadeau.</p>'}
  ${threeOwners(g)}
  <div class="score-table">${scores.map(([pid,n])=>`<div class="score-line"><span>${name(pid)}</span><b>${n} punten</b></div>`).join('')}</div>
- ${isHost?`<div class="host-review"><h2>Antwoorden controleren</h2><p class="subtle">Fout gerekende antwoorden kun je alsnog goedkeuren. Ook een correctie ongedaan maken kan vóór de cadeau-uitdeling.</p>${revisions||'<p>Geen handmatige tekstbeoordeling nodig.</p>'}${button('v2_confirm',winners.length?'✓ Uitslag bevestigen · cadeaus':'✓ Uitslag bevestigen · terug naar het rad','gold')}</div>`:'<p class="subtle">De spelleider controleert de antwoorden voordat de cadeaus worden uitgedeeld.</p>'}</div>`;
+ ${isHost?`<div class="host-review"><h2>Antwoorden controleren</h2><p class="subtle">Fout gerekende antwoorden kun je hier alsnog goedkeuren (of weer afkeuren).</p>${revisions||'<p>Geen handmatige tekstbeoordeling nodig.</p>'}${button('v2_confirm',winners.length?'✓ Uitslag bevestigen · cadeaus':'✓ Uitslag bevestigen · terug naar het rad','gold')}</div>`:'<p class="subtle">De spelleider bevestigt zo de uitslag.</p>'}</div>`;
 }
-function giftScreen(){const sh=state.show,g=sh.gift,need=g?.requirement;if(!g||!need)return `<div class="stage-card">Cadeaus worden klaargemaakt…</div>`;
- const self=need.kind==='self';return `<div class="stage-card gift-stage"><p class="eyebrow">🎁 Tijd om uit te pakken</p><h1>${g.winners.length>1?'De winnaars pakken uit!':'Hoera, een winnaar!'}</h1><div class="prize-icons"><span>🎁</span></div>
- <div class="winner-display">${name(need.winner)} kiest een cadeau${g.winners.length>1?` · winnaar ${g.winner_index+1} van ${g.winners.length}`:''}</div>
- <h2>${self?'Een cadeau voor jezelf':'Kies een cadeau voor een ander'}</h2>
- ${self?`<p>Voor ${name(need.winner)}.</p>`:`<p>${name(need.winner)} heeft alle eigen cadeaus al en kiest een cadeau voor iemand anders. Spelers met de minste cadeaus gaan voor.</p>`}
- <div class="choice-grid">${need.eligible.map(pid=>isHost?`<button class="gift-choice" data-act="v2_give" data-value="${pid}">🎁 ${name(pid)}<small>${pl(pid)?.received}/${pl(pid)?.target} ontvangen</small></button>`:`<div class="gift-choice">🎁 ${name(pid)}<small>${pl(pid)?.received}/${pl(pid)?.target} ontvangen</small></div>`).join('')}</div>
- <div class="prize-footer">${g.awarded.length} cadeau${g.awarded.length===1?'':'s'} deze minigame uitgedeeld · ${sh.remaining_gifts} cadeaus over</div>
- ${isHost&&sh.can_undo_gift?button('v2_undo_gift','↩ Laatste cadeau terugdraaien','soft-btn'):''}</div>`;}
+function giftScreen(){const g=state.show.gift;if(!g)return `<div class="stage-card">Even geduld…</div>`;
+ const many=g.winners.length>1;
+ return `<div class="stage-card gift-stage"><p class="eyebrow">🎁 Cadeautijd</p><h1>${many?'De winnaars kiezen een cadeau!':'Kies een cadeau!'}</h1><div class="prize-icons"><span>🎁</span></div>
+ <div class="gift-winners">${g.winners.map(pid=>`<div class="winner-display">${name(pid)}</div>`).join('')}</div>
+ <p>${many?'Iedere winnaar':'De winnaar'} pakt een cadeau uit de zak: voor zichzelf of voor een ander.</p>
+ ${isHost?button('v2_gift_done','Verder →','gold'):''}</div>`;}
 const alarmSvg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18v-6a5 5 0 0 1 10 0v6"/><path d="M5 21h14"/><path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="M2 12h2"/><path d="m19.07 4.93-1.41 1.41"/><path d="M20 12h2"/><path d="M4 18h16"/></svg>';
 function groceryScreen(){const gr=state.show.grocery,mode=state.show.mode;
  if(mode==='grocery_alarm')return `<div class="alarm-screen" role="alert">
@@ -296,7 +291,7 @@ function groceryScreen(){const gr=state.show.grocery,mode=state.show.mode;
   <h2>${gr.phase==='alarm_intro'?'ONTHOUD DE BOODSCHAPPEN!':'WAT STOND ER OP DE LIJST?'}</h2>
   <p>De spelshow wordt even onderbroken…</p>
   ${isHost?button('v2_grocery_show','▶ Start de verrassing','alarm-btn'):''}
-  ${isHost&&state.show.can_undo_gift?button('v2_undo_gift','↩ Laatste cadeau terugdraaien','soft-btn'):''}</div></div>`;
+</div></div>`;
  if(mode==='grocery_study')return `<div class="stage-card groceries"><p class="eyebrow">🛒 Onthoud de boodschappen</p><h1>20 boodschappen · 60 seconden</h1>
  ${isPhone?'<div class="waiting">👀 Kijk naar de televisie en probeer alle boodschappen te onthouden.</div>':`<div class="grocery-list">${(gr.items||[]).map((x,i)=>`<div><span>${i+1}.</span>${html(x)}</div>`).join('')}</div>`}
  <div class="timer-hero"><span data-countdown="${gr.deadline}">01:00</span></div>${isHost?button('v2_grocery_close','Verder naar het rad →','alt','data-after-timer="true"'):''}</div>`;
@@ -308,12 +303,12 @@ function groceryScreen(){const gr=state.show.grocery,mode=state.show.mode;
   const best=rows[0]?.[1]?.score||0,trophy=v=>best>0&&v.score===best?'🏆':'';
   return `<div class="stage-card review"><p class="eyebrow">🛒 De boodschappen zijn geteld</p><h1>Wie onthield de meeste?</h1><div class="score-table">${rows.map(([pid,v])=>`<div class="score-line"><span>${name(pid)}</span><b>${v.score} punten ${trophy(v)}</b></div>`).join('')}</div>
  ${!isPhone?`<div class="grocery-list compact">${(gr.items||[]).map((x,i)=>`<div><span>${i+1}.</span>${html(x)}</div>`).join('')}</div>`:''}
- ${isHost?`<div class="host-review"><h2>Controleer de antwoorden</h2>${rows.map(([pid,v])=>`<h3>${name(pid)}</h3>${v.answers.map(a=>`<div class="review-row"><span>${html(a.text)}</span><b class="${a.accepted?'ok':'no'}">${a.accepted?'Goed':'Fout'}</b>${button('v2_grocery_override',a.accepted?'↩ Afkeuren':'✓ Goedkeuren',a.accepted?'soft-btn':'alt',`data-player="${pid}" data-guess="${encodeURIComponent(a.text)}" data-accepted="${a.accepted?'false':'true'}"`)}</div>`).join('')}`).join('')}${button('v2_grocery_confirm',best>0?'✓ Uitslag bevestigen · cadeaus':'✓ Uitslag bevestigen · geen winnaar','gold')}</div>`:''}</div>`;
+ ${isHost?`<div class="host-review"><h2>Controleer de antwoorden</h2>${rows.map(([pid,v])=>`<h3>${name(pid)}</h3>${v.answers.map(a=>`<div class="review-row"><span>${html(a.text)}</span><b class="${a.accepted?'ok':'no'}">${a.accepted?'Goed':'Fout'}</b>${button('v2_grocery_override',a.accepted?'↩ Afkeuren':'✓ Goedkeuren',a.accepted?'soft-btn':'alt',`data-player="${pid}" data-guess="${encodeURIComponent(a.text)}" data-accepted="${a.accepted?'false':'true'}"`)}</div>`).join('')}`).join('')}${button('v2_grocery_confirm',best>0?'✓ Uitslag bevestigen · cadeau kiezen':'✓ Uitslag bevestigen · geen winnaar','gold')}</div>`:''}</div>`;
  }
  return '<div class="stage-card"><h1>Het boodschappenspel</h1></div>';
 }
-function finished(){return `<div class="stage-card final"><p class="eyebrow">✨ De cadeauzak is leeg</p><div class="final-icon">🎁🎉🎄</div><h1>Fijne pakjesavond!</h1><p>${state.show.gifts_given} cadeaus uitgedeeld, ${state.show.regular_completed} reguliere minigames gespeeld.</p>
- <div class="score-table">${state.players.map(p=>`<div class="score-line"><span>${html(p.name)}</span><b>${p.received} cadeaus · ${p.wins} gewonnen</b></div>`).join('')}</div>${isHost&&state.show.can_undo_gift?button('v2_undo_gift','↩ Laatste cadeau terugdraaien','soft-btn'):''}${isHost?button('v2_reset','↺ Een nieuwe spelavond','alt'):''}</div>`;}
+function finished(){return `<div class="stage-card final"><p class="eyebrow">✨ Einde van de spelshow</p><div class="final-icon">🎁🎉🎄</div><h1>Fijne pakjesavond!</h1><p>${state.show.regular_completed} minigames gespeeld. Bedankt voor het meespelen!</p>
+ ${isHost?`<div class="actions">${button('v2_resume','↶ Toch verder spelen','alt')}${button('v2_reset','↺ Een nieuwe spelavond','soft-btn')}</div>`:''}</div>`;}
 function unauthorized(){return `<div class="stage-card"><h1>🔒 Spelleiderlink ontbreekt</h1><p>De hostpagina is geopend zonder de geldige toegangssleutel.</p><p>Open op de laptop de volledige hostlink in het venster van start.bat, of gebruik <a href="http://127.0.0.1:${location.port||'8765'}/host">de lokale hostlink</a>.</p></div>`;}
 function viewScreen(){if(page==='home')return home();if(!state)return '<div class="loading">Verbinding maken…</div>';
  if(isHost&&!state.host_authorized)return shell(unauthorized());
@@ -328,9 +323,9 @@ function viewScreen(){if(page==='home')return home();if(!state)return '<div clas
  return shell(content,!isPhone && mode!=='grocery_alarm' && mode!=='grocery_study');}
 function renderHash(){const s=state,sh=s?.show,g=sh?.game,r=g?.current;
  if(!sh)return 'none';
- const seats=s?.players?.map(p=>[p.name,p.joined,p.received,p.target]);
- if(isPhone)return JSON.stringify([sh.mode,sh.spin_player,sh.enabled_games,sh.disabled_games,sh.gifts_given,g?.category,g?.phase,g?.index,r?.stage,r?.my_answer,r?.my_vote,r?.my_attempts?.length,r?.deadline,r?.chooser,r?.investigator,r?.guess,r?.turn,sh.grocery?.phase,sh.grocery?.my_response?.length,s?.me,s?.me?null:seats,sh.has_story?.[s?.me],sh.stories_needed]);
- return JSON.stringify([sh.mode,sh.spin_player,sh.enabled_games,sh.disabled_games,sh.gifts_given,sh.bag,sh.regular_completed,g?.category,g?.phase,g?.index,g?.scores,r?.stage,r?.submitted,r?.voted,r?.deadline,r?.revealed,r?.all_answers,r?.all_attempts,r?.attempt_count,r?.questions_used,r?.turn,sh.grocery?.phase,sh.grocery?.responses_count,sh.grocery?.review,sh.gift?.winner_index,seats,sh.hitster_count,sh.has_story,sh.stories_needed,sh.can_undo_gift,revealedWord]);
+ const seats=s?.players?.map(p=>[p.name,p.joined]);
+ if(isPhone)return JSON.stringify([sh.mode,sh.spin_player,sh.enabled_games,sh.disabled_games,sh.gift,g?.category,g?.phase,g?.index,r?.stage,r?.my_answer,r?.my_vote,r?.my_attempts?.length,r?.deadline,r?.chooser,r?.investigator,r?.guess,sh.grocery?.phase,sh.grocery?.my_response?.length,s?.me,s?.me?null:seats,sh.has_story?.[s?.me],sh.stories_needed]);
+ return JSON.stringify([sh.mode,sh.spin_player,sh.enabled_games,sh.disabled_games,sh.gift,sh.bag,sh.regular_completed,g?.category,g?.phase,g?.index,g?.scores,r?.stage,r?.submitted,r?.voted,r?.deadline,r?.revealed,r?.all_answers,r?.all_attempts,r?.attempt_count,r?.questions_used,sh.grocery?.phase,sh.grocery?.responses_count,sh.grocery?.review,seats,sh.hitster_count,sh.has_story,sh.stories_needed,revealedWord]);
 }
 function setCountdowns(){document.querySelectorAll('[data-countdown]').forEach(el=>{
  const deadline=Number(el.dataset.countdown);if(!deadline)return;
@@ -367,7 +362,7 @@ const draftKey=el=>el.id||el.name||'';
 document.addEventListener('input',e=>{const el=e.target;if(!el.matches?.('input:not([type=file]),textarea,select'))return;const k=draftKey(el);if(k)drafts[k]=el.value;});
 document.addEventListener('change',e=>{const el=e.target;if(el.matches?.('select')){const k=draftKey(el);if(k)drafts[k]=el.value;}});
 const DRAFT_FIELDS={save_story:['my-story'],host_story:['host-story'],send_quip:['quippy'],send_guess:['guess'],
- send_quiz:['quiz-text','quiz-year'],send_groceries:['groceries-answer'],v2_start:['name0','name1','name2','name3','target0','target1','target2','target3']};
+ send_quiz:['quiz-text','quiz-year'],send_groceries:['groceries-answer'],v2_start:['name0','name1','name2','name3']};
 function clearDrafts(action){(DRAFT_FIELDS[action]||[]).forEach(k=>delete drafts[k]);}
 function renderApp(){const active=document.activeElement,activeKey=active&&$('#app').contains(active)?draftKey(active):'';
  const caret=activeKey&&typeof active.selectionStart==='number'?[active.selectionStart,active.selectionEnd]:null;
@@ -420,7 +415,7 @@ async function act(b){if(busy)return;const action=b.dataset.act;busy=true;b.disa
    const v=await request('/api/claim',{room:code,player:b.dataset.player,token});
    token=v.token;localStorage.setItem(tokenKey,token);localStorage.setItem('sintspel-room',code);
   }else if(action==='v2_reset'){
-   if(prompt('Nieuwe spelavond: dit wist scores, cadeaustand, weetjes en telefoonkoppelingen. Namen, aantallen cadeaus en de muziekbibliotheek blijven bewaard. Typ RESET:')!=='RESET')return;
+   if(prompt('Nieuwe spelavond: dit wist de voortgang, weetjes en telefoonkoppelingen. Namen en de muziekbibliotheek blijven bewaard. Typ RESET:')!=='RESET')return;
    await host(action,{confirmation:'RESET'});
   }else if(action==='v2_disable_game'){
     const category=game()?.category||state?.show?.gift?.category||$('#disable-select')?.value;
@@ -430,8 +425,8 @@ async function act(b){if(busy)return;const action=b.dataset.act;busy=true;b.disa
   }else if(action==='v2_release_seat'){
     if(!confirm(`Telefoon van ${pl(b.dataset.value)?.name||'deze speler'} ontkoppelen? Die speler kan daarna opnieuw aanmelden, ook met een andere telefoon.`))return;
     await host(action,{player:b.dataset.value});
-  }else if(action==='v2_pong_finish'){
-    if(game()?.phase!=='done'&&!confirm('Pepernotenpong afsluiten voordat iedereen heeft gegooid?'))return;
+  }else if(action==='v2_finish'){
+    if(!confirm('De spelavond afsluiten? Staat de boodschappenlijst nog open, dan volgt eerst nog de herinnerronde.'))return;
     await host(action);
   }else if(action==='v2_enable_game'){
     await host(action,{category:$('#enable-select')?.value});
@@ -458,7 +453,7 @@ async function act(b){if(busy)return;const action=b.dataset.act;busy=true;b.disa
    await host('v2_story',{player:$('#story-player')?.value,story:$('#host-story')?.value});
   }else if(action==='v2_start'){
    const form=$('#setup-form');
-   if(form){const fd=new FormData(form);await host('v2_configure',{players:Array.from({length:4},(_,i)=>({name:fd.get('name'+i),target:Number(fd.get('target'+i))}))});}
+   if(form){const fd=new FormData(form);await host('v2_configure',{players:Array.from({length:4},(_,i)=>({name:fd.get('name'+i)}))});}
    await host('v2_start');
   }else if(action==='v2_direct'){
    await host(action,{category:$('#quick-game')?.value});
@@ -466,11 +461,8 @@ async function act(b){if(busy)return;const action=b.dataset.act;busy=true;b.disa
    await host(action,{round:Number(b.dataset.round),player:b.dataset.player,accepted:b.dataset.accepted==='true',remember:true});
   }else if(action==='v2_grocery_override'){
    await host(action,{player:b.dataset.player,guess:decodeURIComponent(b.dataset.guess),accepted:b.dataset.accepted==='true'});
-  }else if(action==='v2_give'){
-   if(!confirm(`Een cadeau voor ${name(b.dataset.value).replace(/&[^;]+;/g,'')} uit de zak pakken?`))return;
-   await host(action,{recipient:b.dataset.value});
   }else if(action==='v2_cancel'){
-   if(!confirm('Minigame annuleren zonder cadeau-uitdeling?'))return;
+   if(!confirm('Minigame annuleren? Het spel komt dan terug op het rad.'))return;
    await host(action);
   }else if(action==='v2_grocery_close'){
    await host(action);
@@ -489,7 +481,7 @@ document.addEventListener('submit',async e=>{
  e.preventDefault();if(busy)return;busy=true;
  try{if(e.target.id==='setup-form'){
   const fd=new FormData(e.target);
-  await host('v2_configure',{players:Array.from({length:4},(_,i)=>({name:fd.get('name'+i),target:Number(fd.get('target'+i))}))});
+  await host('v2_configure',{players:Array.from({length:4},(_,i)=>({name:fd.get('name'+i)}))});
   clearDrafts('v2_start');
  }else{
   const file=$('#csv-file').files[0];if(!file)throw Error('Kies eerst een CSV-bestand.');

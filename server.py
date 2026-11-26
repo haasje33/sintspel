@@ -46,7 +46,7 @@ STATIC_FILES = {'/': 'index.html', '/host': 'index.html', '/screen': 'index.html
 def init_state():
     return {
         'room': str(RNG.randrange(1000, 10000)), 'version': 0,
-        'players': [{'id': f'p{i+1}', 'name': name, 'received': 0, 'target': 9, 'wins': 0, 'token': None}
+        'players': [{'id': f'p{i+1}', 'name': name, 'token': None}
                     for i, name in enumerate(['Speler 1', 'Speler 2', 'Speler 3', 'Speler 4'])],
         'history': [], 'hitster_cards': [],
     }
@@ -81,6 +81,9 @@ S = load_state()
 # Drop keys from the retired first version of the game engine.
 for legacy in ('mode', 'bag', 'recent', 'spin', 'game', 'gift', 'music', 'hitster_used', 'used', 'started_at'):
     S.pop(legacy, None)
+for p in S['players']:  # gift counts and wins are no longer tracked
+    for legacy in ('received', 'target', 'wins'):
+        p.pop(legacy, None)
 show_v2.ensure(S)
 show_v2.load_packaged_library(S, BASE / 'data' / 'music-library.json')
 if ADMIN.exists():

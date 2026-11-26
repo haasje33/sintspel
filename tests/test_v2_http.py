@@ -44,7 +44,7 @@ def main():
         assert not any(p['joined'] for p in get()['players'])
         # A rejected configuration must not half-apply (transaction rollback).
         try:
-            ad('v2_configure',players=[{'name':'Jan','target':3}]*4);raise AssertionError('accepted duplicates')
+            ad('v2_configure',players=[{'name':'Jan'}]*4);raise AssertionError('accepted duplicates')
         except urllib.error.HTTPError as e:assert e.code==400
         assert 'Jan' not in [p['name'] for p in get()['players']]
         assert isinstance(st['show'],dict) and st['show']['hitster_count']>=100
@@ -53,7 +53,7 @@ def main():
             tv=json.load(response)
         assert isinstance(tv['show'],dict) and tv['show']['mode']=='setup'
         assert 'hitster_cards' not in tv['show']
-        ad('v2_configure',players=[{'name':f'Gezin {i}','target':9} for i in range(1,5)])
+        ad('v2_configure',players=[{'name':f'Gezin {i}'} for i in range(1,5)])
         tokens={}
         for p in st['players']:
             resp=api('/api/claim',{'room':st['room'],'player':p['id']})
@@ -70,7 +70,7 @@ def main():
         assert get()['show']['game']['index']==1
         ad('v2_cancel')
         assert get()['show']['mode']=='wheel'
-        assert get()['show']['remaining_gifts']==36
+        assert get()['show']['regular_completed']==0
         print('PASS: HTTP host/session, joining, stories, direct game, player answers, reveal and cancel')
     finally:
         ad('v2_reset',confirmation='RESET')
