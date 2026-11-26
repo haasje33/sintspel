@@ -117,7 +117,7 @@ PARTY_PORT=8766 python tests/test_v2_http.py
 
 De schermen volgen het Figma-ontwerp *Sintspel 2.0 — UI Design*:
 
-- **TV** (`static/tv.js`, `static/tv.css`): alle schermen zijn op het 2560×1440-raster van het ontwerp gebouwd en schalen als geheel naar elk TV-formaat (1080p, 1440p, 4K; bij een andere beeldverhouding met zwarte randen). Zet de TV-browser op volledig scherm (F11).
+- **TV** (`static/tv.js`, `static/tv.css`): de namen op het spelrad draaien mee met hun vak, zodat het gekozen spel na het stoppen recht onder de pijl staat. Alle schermen zijn op het 2560×1440-raster van het ontwerp gebouwd en schalen als geheel naar elk TV-formaat (1080p, 1440p, 4K; bij een andere beeldverhouding met zwarte randen). Zet de TV-browser op volledig scherm (F11).
 - **Host** (`static/host.css`): het dashboard volgt de stijl van het host-ontwerp, met een menu links, spelerskaarten rechts en de bediening in het midden.
 - **Telefoons** hebben geen eigen ontwerp in Figma en gebruiken de bestaande, eenvoudige layout.
 - Illustraties en iconen staan in `static/figma/`. De speelkaarten (`static/cards.svg`, een publiek-domein kaartspel; de jokers worden niet gebruikt) en de kaartrug (`static/card-back.svg`) komen ook uit het ontwerp. Het lettertype Manrope (SIL Open Font License) zit in `static/fonts/`, zodat alles ook zonder internet werkt.

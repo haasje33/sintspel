@@ -204,10 +204,8 @@ html.tv-display .tv-pcard-frame.playing-card{width:405px;height:605px;aspect-rat
 .tv-wheel-rot{position:absolute;inset:0}
 .tv-wheel-rot svg{position:absolute;left:0;top:0}
 .tv-wheel-rot.spin{animation:tv-wheel-spin 5.6s cubic-bezier(.12,.7,.15,1) forwards}
-.tv-wheel-rot.spin .tv-wlabel{animation:tv-wheel-counter 5.6s cubic-bezier(.12,.7,.15,1) forwards}
 @keyframes tv-wheel-spin{from{transform:rotate(0)}to{transform:rotate(var(--to))}}
-@keyframes tv-wheel-counter{from{transform:translate(-50%,-50%) rotate(0)}to{transform:translate(-50%,-50%) rotate(calc(-1 * var(--to)))}}
-.tv-wlabel{position:absolute;transform:translate(-50%,-50%);width:320px;display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;color:#080b17;line-height:1.11}
+.tv-wlabel{position:absolute;width:320px;display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;color:#080b17;line-height:1.11}
 .tv-wlabel img{display:block}
 .tv-wlabel .glyph{font-size:44px;line-height:1}
 .tv-banner-name{left:189px;top:423px;width:430px;height:132px;display:flex;align-items:center;justify-content:center;line-height:1.11;color:var(--tv-cream);white-space:nowrap}
@@ -221,4 +219,4 @@ html.tv-display .tv-pcard-frame.playing-card{width:405px;height:605px;aspect-rat
 .tv-well h2{margin:0;font-size:110px;color:var(--tv-gold)}
 .tv-well p{margin:0;font-size:56px;font-weight:700;color:var(--tv-cream);max-width:1800px}
 .tv-legacy{overflow:auto}
-@media (prefers-reduced-motion:reduce){.tv-wheel-rot.spin,.tv-wheel-rot.spin .tv-wlabel{animation-duration:.01s}.tv-wheel-result{animation-delay:0s}.tv-alarm-wash,.tv-flare,.tv-rim,.tv-siren{animation:none}.tv-qwheel-rot.spin{animation-duration:.01s}.tv-song,.tv-flip .tv-flip-inner{transition:none}}
+@media (prefers-reduced-motion:reduce){.tv-wheel-rot.spin{animation-duration:.01s}.tv-wheel-result{animation-delay:0s}.tv-alarm-wash,.tv-flare,.tv-rim,.tv-siren{animation:none}.tv-qwheel-rot.spin{animation-duration:.01s}.tv-song,.tv-flip .tv-flip-inner{transition:none}}

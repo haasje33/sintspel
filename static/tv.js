@@ -251,7 +251,9 @@ function wheelLabels(bag){const n=bag.length,step=360/n;
  return bag.map((id,i)=>{const a=((i+.5)*step-90)*Math.PI/180,r=n<=2?250:345,x=WHEEL_R+r*Math.cos(a),y=WHEEL_R+r*Math.sin(a);
   const label=(WHEEL_STYLE[id]||[,,html(up(cat(id).name))])[2],top=Math.abs(((i+.5)*step)%360-0)<40||Math.abs(((i+.5)*step)-360)<40;
   const icon=id==='pong'?'<span class="glyph">●</span>':`<img src="${FIG}icon-${id}.svg" alt="">`;
-  return `<div class="tv-wlabel" style="left:${x.toFixed(1)}px;top:${y.toFixed(1)}px;font-size:${top?33:38}px">${icon}<b>${label}</b></div>`;}).join('');}
+  // Labels belong to their wedge and turn with the wheel: 'up' points outwards,
+  // so the chosen game ends upright under the pointer.
+  return `<div class="tv-wlabel" style="left:${x.toFixed(1)}px;top:${y.toFixed(1)}px;font-size:${top?33:38}px;transform:translate(-50%,-50%) rotate(${((i+.5)*step).toFixed(2)}deg)">${icon}<b>${label}</b></div>`;}).join('');}
 function tvWheel(){const sh=state.show,spinning=sh.mode==='spinning'&&sh.spin;
  const bag=spinning&&sh.spin.options?.length?sh.spin.options:(sh.bag.length?sh.bag:sh.enabled_games);
  const ids=state.players.map(p=>p.id);
